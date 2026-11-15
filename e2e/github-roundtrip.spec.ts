@@ -39,7 +39,7 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
     const shape = (v: string) => `len=${v.length} trimmed=${v.trim().length}`;
     throw new Error(
       `GitHub refused the sign-in: flash="${flash}" captcha=${captcha > 0} h1="${heading}" ` +
-        `login(${shape(login!)} isTestAccount=${login!.trim() === 'ttbdsv'}) password(${shape(password!)})`,
+        `login(${shape(login!)} isTestAccount=${login!.trim() === 'ttbdsv'}) password(${shape(password!)} equalsTotpSecret=${password === totpSecret})`,
     );
   }
 
