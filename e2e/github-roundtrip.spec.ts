@@ -35,7 +35,12 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
     const flash = (await page.locator('.flash-error, .js-flash-alert').allInnerTexts()).join(' ').trim();
     const captcha = await page.locator('iframe[src*="captcha"], #octocaptcha-token, [data-octocaptcha]').count();
     const heading = (await page.locator('h1').allInnerTexts()).join(' | ').trim();
-    throw new Error(`GitHub refused the sign-in: flash="${flash}" captcha=${captcha > 0} h1="${heading}"`);
+    // Shapes only (lengths, stray whitespace), never the values themselves.
+    const shape = (v: string) => `len=${v.length} trimmed=${v.trim().length}`;
+    throw new Error(
+      `GitHub refused the sign-in: flash="${flash}" captcha=${captcha > 0} h1="${heading}" ` +
+        `login(${shape(login!)} isTestAccount=${login!.trim() === 'ttbdsv'}) password(${shape(password!)})`,
+    );
   }
 
   // After the password GitHub asks for the TOTP code (2FA account), may show
