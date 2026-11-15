@@ -108,7 +108,7 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 - **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
 
-No secret is needed. GitHub and Google are only tested up to the redirect, so placeholder client ids are enough; Apple stays `not-configured` unless the `AUTH_APPLE_*` variables are present.
+No secret is needed for the main suite. GitHub and Google are only tested up to the redirect, so placeholder client ids are enough; Apple stays `not-configured` unless the `AUTH_APPLE_*` variables are present.
 
 #### Optional: full GitHub OAuth round trip
 
@@ -119,6 +119,8 @@ With these repository secrets, the e2e job also signs in to GitHub for real and 
 | `E2E_GITHUB_OAUTH_CLIENT_ID` / `E2E_GITHUB_OAUTH_CLIENT_SECRET` | A GitHub OAuth app whose callback URL is `http://127.0.0.1:3211/oauth/github/callback` (the CI backend). |
 | `E2E_GITHUB_LOGIN` / `E2E_GITHUB_PASSWORD` | A dedicated test account, never a personal one. |
 | `E2E_GITHUB_TOTP_SECRET` | The base32 key of the account's authenticator-app 2FA. Without 2FA, GitHub sends an emailed device code from a new machine, which a test cannot read. |
+
+The test lives in [`e2e/github-roundtrip.spec.ts`](e2e/github-roundtrip.spec.ts) and is tagged `@secrets`. Playwright writes every `fill` value into its trace and HTML report, so this file records no trace, screenshot or video. CI runs it in a separate step (`--grep @secrets --reporter=list`) whose output is never uploaded; the main step runs `--grep-invert @secrets`. If GitHub refuses the sign-in, the error gives GitHub's message and the shape of the credentials (lengths, stray whitespace), never their values. Without the secrets the test is skipped. Locally, without `E2E_GITHUB_TOTP_SECRET`, it waits for the 2FA code to be typed in the browser (`--headed`). `scripts/check-github-password.mjs` checks the account's password alone, on the real GitHub login page, without printing it.
 
 Locally, export the `E2E_GITHUB_*` variables and set the OAuth app with `npx convex env set`. On CI the account's screenshots are not taken, because artifacts of a public repository are public.
 

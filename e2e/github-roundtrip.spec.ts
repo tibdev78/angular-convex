@@ -20,7 +20,7 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
   // test account's pages there.
   const proof = process.env['CI'] ? async (_step: string) => undefined : (step: string) => shot(page, info, step);
   test.skip(!login || !password, 'E2E_GITHUB_LOGIN / E2E_GITHUB_PASSWORD are not set');
-  test.setTimeout(90_000);
+  test.setTimeout(process.env['E2E_GITHUB_TOTP_SECRET'] ? 90_000 : 180_000);
   await page.goto('/login');
   await page.getByTestId('tab-oauth').click();
   await page.getByTestId('gh-signin').click();
@@ -53,9 +53,13 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
       throw new Error('GitHub asks for an emailed device code: enable TOTP 2FA on the test account and set E2E_GITHUB_TOTP_SECRET');
     }
     if (path.includes('two-factor')) {
-      if (!totpSecret) throw new Error('GitHub asks for a 2FA code: set E2E_GITHUB_TOTP_SECRET');
-      await page.locator('#app_totp').fill(totp(totpSecret));
-      await page.waitForURL((url) => !url.pathname.includes('two-factor'), { timeout: 30_000 });
+      if (totpSecret) {
+        await page.locator('#app_totp').fill(totp(totpSecret));
+      } else if (process.env['CI']) {
+        throw new Error('GitHub asks for a 2FA code: set E2E_GITHUB_TOTP_SECRET');
+      }
+      // Locally (headed) without the key, whoever runs the test types the code.
+      await page.waitForURL((url) => !url.pathname.includes('two-factor'), { timeout: totpSecret ? 30_000 : 120_000 });
     } else if (path.includes('oauth/authorize')) {
       await proof('github-authorize');
       await page.locator('button[name="authorize"][value="1"]').click();
