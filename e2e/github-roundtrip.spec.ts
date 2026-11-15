@@ -28,6 +28,15 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
   await page.locator('#login_field').fill(login!);
   await page.locator('#password').fill(password!);
   await page.locator('input[name="commit"]').click();
+  // A refused sign-in stays on /session: report GitHub's own message (or its
+  // CAPTCHA) instead of a bare timeout. Nothing here echoes the credentials.
+  await page.waitForLoadState('load');
+  if (new URL(page.url()).pathname === '/session') {
+    const flash = (await page.locator('.flash-error, .js-flash-alert').allInnerTexts()).join(' ').trim();
+    const captcha = await page.locator('iframe[src*="captcha"], #octocaptcha-token, [data-octocaptcha]').count();
+    const heading = (await page.locator('h1').allInnerTexts()).join(' | ').trim();
+    throw new Error(`GitHub refused the sign-in: flash="${flash}" captcha=${captcha > 0} h1="${heading}"`);
+  }
 
   // After the password GitHub asks for the TOTP code (2FA account), may show
   // the authorization screen (first sign-in to the app), or goes straight back.
