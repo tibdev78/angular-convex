@@ -48,7 +48,7 @@ export class Todos {
 }
 ```
 
-A `ConvexQuery<T>` is a `Signal<T | undefined>` with `data`, `error`, `status` (`pending | success | error | skipped`), `isLoading`, `isSuccess`, `isError` and `isSkipped`. Options: `initialValue`, `keepPreviousData`, `ssr`, `injector`.
+A `ConvexQuery<T>` is a `Signal<T | undefined>` with `data`, `error`, `status` (`pending | success | error | skipped`), `isLoading`, `isSuccess`, `isError` and `isSkipped`. Options: `initialValue`, `keepPreviousData`, `ssr`, `throwOnError`, `injector`. With `throwOnError: true`, reading the signal throws the query's error, like `useQuery_experimental` in React; catch it in a `computed` or let an error handler take it.
 
 | Need | API |
 |---|---|
@@ -56,7 +56,9 @@ A `ConvexQuery<T>` is a `Signal<T | undefined>` with `data`, `error`, `status` (
 | Pagination (`usePaginatedQuery`) | `injectPaginatedQuery(api.events.list, () => ({ kind }), { initialNumItems: 25 })` exposes `results`, `status`, `canLoadMore` and `loadMore(n)` |
 | Warm the cache before navigating | `prewarmQuery(ref, args)` in an injection context, or `const prewarm = injectPrewarmQuery(); prewarm(ref, args)` |
 | RxJS | `fromConvexQuery(injectConvex(), ref, args)` returns an `Observable` |
-| One-shot HTTP call | `injectConvexHttpClient()` |
+| One-shot HTTP call | `injectConvexHttpClient()` (anonymous, shared) |
+| One-shot HTTP call as the signed-in user, `consistentQuery` | `const client = await injectAuthenticatedHttpClient()()` |
+| Token for your own `fetch` (HTTP actions) | `const token = await injectFetchAccessToken()?.()` |
 | Raw client | `injectConvex()` |
 
 ## Mutations and actions
@@ -120,7 +122,7 @@ const convex = new FakeConvexClient();
 convex.setQuery(api.todos.list, {}, [{ _id: '1', text: 'a' }]);
 convex.onMutation(api.todos.add, ({ text }) => 'new-id');
 TestBed.configureTestingModule({ providers: [provideConvexTesting(convex)] });
-// convex.calls records every mutation/action; setQueryError, setPaginatedItems and setConnectionState are also available
+// convex.calls records every mutation/action; setQueryError, setPaginatedItems, setPaginatedError and setConnectionState are also available
 ```
 
 ## Convex React → angular-convex
@@ -129,6 +131,7 @@ TestBed.configureTestingModule({ providers: [provideConvexTesting(convex)] });
 |---|---|
 | `ConvexReactClient`, `ConvexProvider` | `provideConvex`, `injectConvex` |
 | `useQuery` (+ `"skip"`) | `injectQuery` |
+| `useQuery_experimental`, `usePaginatedQuery_experimental` | `{ throwOnError: true }` |
 | `useQueries` | `injectQueries` |
 | `usePaginatedQuery` | `injectPaginatedQuery` |
 | `useMutation` + `withOptimisticUpdate` | `injectMutation` |
@@ -140,6 +143,9 @@ TestBed.configureTestingModule({ providers: [provideConvexTesting(convex)] });
 | `prewarmQuery` | `prewarmQuery`, `injectPrewarmQuery` |
 | `preloadQuery` + `usePreloadedQuery` | SSR prefetch via `TransferState` (automatic) |
 | `ConvexAuthProvider`, `useAuthActions`, `useAuthToken` | `provideConvexAuthClient`, `injectAuthActions`, `injectAuthToken` |
+| `ConvexHttpClient` + `setAuth` | `injectAuthenticatedHttpClient` |
+
+The feature-by-feature map, with the demo file and test for each, is in [COVERAGE.md](../../COVERAGE.md).
 
 ## Compatibility
 

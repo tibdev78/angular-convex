@@ -54,6 +54,16 @@ describe('injectPaginatedQuery', () => {
     expect(page.loadMore(1)).toBe(false);
   });
 
+  it('exposes errors, and throws them on read with throwOnError', () => {
+    const { convex, injector } = setup();
+    const soft = injectPaginatedQuery(pageTodos, {}, { initialNumItems: 2, injector });
+    const hard = injectPaginatedQuery(pageTodos, {}, { initialNumItems: 2, injector, throwOnError: true });
+    convex.setPaginatedError(pageTodos, {}, new Error('boom'));
+    expect(soft.error()?.message).toBe('boom');
+    expect(soft.results()).toEqual([]);
+    expect(() => hard.results()).toThrow('boom');
+  });
+
   it('restarts when args change and supports skip', async () => {
     const { convex } = setup();
     const tag = signal<string | null>(null);

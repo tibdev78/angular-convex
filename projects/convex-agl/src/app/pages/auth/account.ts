@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,8 @@ import { injectMutation, injectQuery } from 'angular-convex';
 import {
   injectAddPasskey,
   injectAuthActions,
+  injectAuthState,
+  injectAuthToken,
   injectRemovePasskey,
   injectStartChangeEmail,
 } from 'angular-convex/convex-auth';
@@ -37,6 +39,15 @@ import { userErrorText } from '../../shared/user-error';
           <input class="grow" name="name" [(ngModel)]="name" placeholder="Display name" data-testid="rename-input" />
           <button type="submit" data-testid="rename-save">Rename</button>
         </form>
+      </section>
+
+      <section class="card" data-testid="session">
+        <h2>Session</h2>
+        <p class="muted">
+          <code>injectAuthState()</code>: authenticated {{ authState().isAuthenticated }}, loading {{ authState().isLoading }}.
+          <code>injectAuthToken()</code>:
+          @if (tokenExpiry(); as exp) { JWT valid until <span data-testid="session-expiry">{{ exp | date: 'HH:mm:ss' }}</span> } @else { no token }
+        </p>
       </section>
 
       @if (user.method === 'usernamePassword' || user.method === 'emailPassword') {
@@ -85,6 +96,15 @@ import { userErrorText } from '../../shared/user-error';
 export class AccountPage {
   private readonly router = inject(Router);
   protected readonly me = injectQuery(api.users.me);
+  protected readonly authState = injectAuthState();
+  private readonly token = injectAuthToken();
+  /** Expiry read from the JWT payload (`exp`, in seconds). */
+  protected readonly tokenExpiry = computed(() => {
+    const payload = this.token()?.split('.')[1];
+    if (!payload) return null;
+    const { exp } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
+    return exp ? new Date(exp * 1000) : null;
+  });
   protected readonly passkeyList = injectQuery(api.auth.listPasskeys, () =>
     this.me()?.method === 'usernamePasskey' ? {} : 'skip',
   );

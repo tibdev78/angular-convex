@@ -57,10 +57,15 @@ test.describe('Demo features', () => {
     await add('Buy oat milk', 'low');
     await add('Write the angular-convex README', 'medium');
     await expect(page.getByTestId('todo-stats')).toHaveText('0/3 done · high 1');
+    // Tab counts come from injectQueries: one live subscription per filter.
+    await expect(page.getByTestId('count-all')).toHaveText('3');
+    await expect(page.getByTestId('count-done')).toHaveText('0');
     await shot(page, info, 'three-todos');
 
     await page.getByTestId('todo-item').filter({ hasText: 'Buy oat milk' }).getByRole('checkbox').check();
     await expect(page.getByTestId('todo-stats')).toHaveText('1/3 done · high 1');
+    await expect(page.getByTestId('count-done')).toHaveText('1');
+    await expect(page.getByTestId('count-active')).toHaveText('2');
     await page.getByTestId('filter-done').click();
     await expect(page.getByTestId('todo-item')).toHaveCount(1);
     await shot(page, info, 'filter-done');

@@ -16,6 +16,8 @@ export type PaginatedArgs<Query> = Omit<ArgsOf<Query>, 'paginationOpts'>;
 export interface PaginatedQueryOptions extends WithInjector {
   /** Size of the first page. */
   initialNumItems: number;
+  /** Reading `results()` while the query is in error throws that error. Defaults to `false`. */
+  throwOnError?: boolean;
 }
 
 export interface ConvexPaginatedQuery<Item> {
@@ -79,7 +81,13 @@ export function injectPaginatedQuery<Query extends QueryReference>(
   });
 
   return {
-    results: results.asReadonly(),
+    results: options.throwOnError
+      ? computed(() => {
+          const e = error();
+          if (e) throw e;
+          return results();
+        })
+      : results.asReadonly(),
     status: status.asReadonly(),
     error: error.asReadonly(),
     isLoading: computed(() => status() === 'LoadingFirstPage' || status() === 'LoadingMore'),

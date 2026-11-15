@@ -29,6 +29,16 @@ describe('injectQuery', () => {
     expect(todos()?.length).toBe(1);
   });
 
+  it('throws the error on read with throwOnError, and recovers', () => {
+    const { convex, injector } = setup();
+    const todos = injectQuery(listTodos, {}, { injector, throwOnError: true });
+    convex.setQueryError(listTodos, {}, new Error('boom'));
+    expect(() => todos()).toThrow('boom');
+    expect(todos.error()?.message).toBe('boom');
+    convex.setQuery(listTodos, {}, []);
+    expect(todos()).toEqual([]);
+  });
+
   it('exposes errors and keeps the last data', () => {
     const { convex, injector } = setup();
     const todos = injectQuery(listTodos, {}, { injector });

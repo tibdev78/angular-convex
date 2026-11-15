@@ -18,6 +18,7 @@ interface PaginatedListener {
   args: Record<string, unknown>;
   loaded: number;
   callback: (value: unknown) => void;
+  onError?: (error: Error) => void;
 }
 
 const keyOf = (name: string, args: unknown) => `${name}:${JSON.stringify(convexToJson((args ?? {}) as Value))}`;
@@ -93,6 +94,12 @@ export class FakeConvexClient {
     for (const l of this.paginated) if (l.name === name && keyOf(name, l.args) === keyOf(name, args)) this.pushPage(l);
   }
 
+  /** Makes a paginated query fail (args without `paginationOpts`). */
+  setPaginatedError(ref: unknown, args: Record<string, unknown>, error: Error): void {
+    const name = getFunctionName(ref as Ref);
+    for (const l of this.paginated) if (l.name === name && keyOf(name, l.args) === keyOf(name, args)) l.onError?.(error);
+  }
+
   /** Registers the implementation of a mutation or action. */
   onMutation(ref: unknown, handler: Handler): void {
     this.handlers.set(getFunctionName(ref as Ref), handler);
@@ -136,8 +143,9 @@ export class FakeConvexClient {
     args: Record<string, unknown>,
     options: { initialNumItems: number },
     callback: (v: unknown) => void,
+    onError?: (e: Error) => void,
   ) {
-    const listener: PaginatedListener = { name: getFunctionName(ref as Ref), args, loaded: options.initialNumItems, callback };
+    const listener: PaginatedListener = { name: getFunctionName(ref as Ref), args, loaded: options.initialNumItems, callback, onError };
     this.paginated.add(listener);
     const unsubscribe = () => void this.paginated.delete(listener);
     return Object.assign(unsubscribe, {

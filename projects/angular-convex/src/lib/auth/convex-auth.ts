@@ -14,7 +14,8 @@ import {
   type EnvironmentProviders,
   type Signal,
 } from '@angular/core';
-import { CONVEX_CLIENT } from '../core/config';
+import { ConvexHttpClient } from 'convex/browser';
+import { CONVEX_CLIENT, CONVEX_CONFIG } from '../core/config';
 
 /** Fetches a JWT for Convex. `forceRefreshToken` is set after the server rejected the previous one. */
 export type AccessTokenFetcher = (args: { forceRefreshToken: boolean }) => Promise<string | null | undefined>;
@@ -147,4 +148,37 @@ export class ConvexAuthService {
 /** Combined auth state as signals (React `useConvexAuth`). */
 export function injectConvexAuth(): Pick<ConvexAuthService, 'state' | 'isLoading' | 'isAuthenticated' | 'isRefreshing'> {
   return inject(ConvexAuthService);
+}
+
+/**
+ * The access token of the configured auth provider, fetched on demand: for a
+ * `fetch` to an HTTP action (`Authorization: Bearer …`) or any other call that
+ * must carry the user's identity. Resolves to `null` without a provider or a
+ * signed-in user.
+ */
+export function injectFetchAccessToken(): (args?: { forceRefreshToken?: boolean }) => Promise<string | null> {
+  const provider = inject(CONVEX_AUTH_PROVIDER, { optional: true });
+  return async ({ forceRefreshToken = false } = {}) => {
+    if (!provider || provider.isLoading() || !provider.isAuthenticated()) return null;
+    return (await provider.fetchAccessToken({ forceRefreshToken })) ?? null;
+  };
+}
+
+/**
+ * A fresh `ConvexHttpClient` that carries the signed-in user's token, so that
+ * `ctx.auth` works in one-shot HTTP calls (`query`, `mutation`, `action`,
+ * `consistentQuery`). The shared `injectConvexHttpClient()` stays anonymous.
+ *
+ * ```ts
+ * const http = injectAuthenticatedHttpClient();
+ * const todos = await (await http()).query(api.todos.list, {});
+ * ```
+ */
+export function injectAuthenticatedHttpClient(): () => Promise<ConvexHttpClient> {
+  const { url } = inject(CONVEX_CONFIG);
+  const fetchToken = injectFetchAccessToken();
+  return async () => {
+    const token = await fetchToken();
+    return new ConvexHttpClient(url, token ? { auth: token } : undefined);
+  };
 }

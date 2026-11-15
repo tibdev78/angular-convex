@@ -2,7 +2,7 @@
   <strong class="brand">convex-agl</strong>
   <nav>
     @for (link of links; track link[0]) {
-      <a [routerLink]="link[0]" routerLinkActive="active">{{ link[1] }}</a>
+      <a [routerLink]="link[0]" routerLinkActive="active" (mouseenter)="warm(link[0])" (focus)="warm(link[0])">{{ link[1] }}</a>
     }
   </nav>
   <span class="grow"></span>
@@ -11,6 +11,7 @@
   </span>
   <a *convexUnauthenticated routerLink="login" routerLinkActive="active" data-testid="login-link">Sign in</a>
   <span *convexAuthLoading class="muted">…</span>
+  <span *convexAuthRefreshing class="muted" data-testid="auth-refreshing">refreshing session…</span>
   <span class="conn" [class.on]="connection().isWebSocketConnected" data-testid="connection">
     {{ connection().isWebSocketConnected ? 'Live' : 'Offline' }}
   </span>

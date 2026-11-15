@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { injectFileUpload, injectMutation, injectPaginatedQuery, injectQuery } from 'angular-convex';
+import { injectFileUpload, injectMutation, injectPaginatedQuery, injectQuery, insertAtTop } from 'angular-convex';
 import { api, type Id } from '../convex';
 
 /** Rounded so the presence query only re-subscribes every 10 s. */
@@ -34,7 +34,7 @@ const bucket = () => Math.floor((Date.now() - 30_000) / 10_000) * 10_000;
     <section class="card">
       <ul class="list" data-testid="chat-messages">
         @for (m of messages.results(); track m._id) {
-          <li data-testid="chat-message">
+          <li data-testid="chat-message" [class.muted]="m._id.startsWith('optimistic:')">
             <strong>{{ m.author?.name ?? '?' }}</strong>
             <span class="grow">{{ m.body }}</span>
             @if (m.imageUrl) { <img [src]="m.imageUrl" alt="" width="64" /> }
@@ -76,7 +76,26 @@ export class ChatPage {
   protected readonly online = computed(() => this.presence() ?? []);
   protected readonly typing = computed(() => this.online().filter((u) => u.typing).map((u) => u.name));
 
-  private readonly send = injectMutation(api.messages.send);
+  private readonly me = injectQuery(api.users.me);
+  // Text messages show at once, before the server confirms: insertAtTop puts
+  // a placeholder on the first page (the list is newest first).
+  private readonly send = injectMutation(api.messages.send).withOptimisticUpdate((localQueryStore, args) => {
+    if (args.imageId) return;
+    insertAtTop({
+      paginatedQuery: api.messages.list,
+      argsToMatch: { channel: args.channel },
+      localQueryStore,
+      item: {
+        _id: `optimistic:${Date.now()}` as Id<'messages'>,
+        _creationTime: Date.now(),
+        channel: args.channel,
+        authorId: (this.me()?._id ?? '') as Id<'users'>,
+        body: args.body.trim(),
+        author: { name: this.me()?.name ?? 'me', avatarUrl: null },
+        imageUrl: null,
+      },
+    });
+  });
   private readonly heartbeat = injectMutation(api.presence.heartbeat);
   protected readonly upload = injectFileUpload(api.files.generateUploadUrl);
 

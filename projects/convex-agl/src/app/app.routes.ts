@@ -25,6 +25,7 @@ export const routes: Routes = [
       { path: 'files', ...page('Files', () => import('./pages/files').then((m) => m.FilesPage)) },
       { path: 'notes', ...page('Notes', () => import('./pages/notes').then((m) => m.NotesPage)) },
       { path: 'jobs', ...page('Jobs', () => import('./pages/jobs').then((m) => m.JobsPage)) },
+      { path: 'lab', ...page('Lab', () => import('./pages/lab').then((m) => m.LabPage)) },
     ],
   },
 ];

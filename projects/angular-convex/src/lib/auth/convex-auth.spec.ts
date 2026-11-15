@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { injectConvexAuth, provideConvexAuth } from './convex-auth';
+import { ConvexHttpClient } from 'convex/browser';
+import { injectAuthenticatedHttpClient, injectConvexAuth, injectFetchAccessToken, provideConvexAuth } from './convex-auth';
 import { ConvexAuthenticated, ConvexAuthLoading, ConvexUnauthenticated } from './auth-directives';
 import { flush, setup } from '../../test/helpers';
 
@@ -83,5 +84,30 @@ describe('auth directives', () => {
     await flush();
     fixture.detectChanges();
     expect(text()).toBe('out');
+  });
+});
+
+describe('injectFetchAccessToken / injectAuthenticatedHttpClient', () => {
+  it('returns the provider token only while signed in', async () => {
+    const { isAuthenticated, fetchAccessToken } = authSetup({ loading: false, authenticated: true });
+    const fetchToken = TestBed.runInInjectionContext(() => injectFetchAccessToken());
+    expect(await fetchToken({ forceRefreshToken: true })).toBe('jwt');
+    expect(fetchAccessToken).toHaveBeenLastCalledWith({ forceRefreshToken: true });
+    isAuthenticated.set(false);
+    expect(await fetchToken()).toBeNull();
+  });
+
+  it('is null without an auth provider', async () => {
+    setup([]);
+    const fetchToken = TestBed.runInInjectionContext(() => injectFetchAccessToken());
+    expect(await fetchToken()).toBeNull();
+  });
+
+  it('builds an HTTP client carrying the token', async () => {
+    authSetup({ loading: false, authenticated: true });
+    const http = TestBed.runInInjectionContext(() => injectAuthenticatedHttpClient());
+    const client = await http();
+    expect(client).toBeInstanceOf(ConvexHttpClient);
+    expect((client as unknown as { auth?: string }).auth).toBe('jwt');
   });
 });

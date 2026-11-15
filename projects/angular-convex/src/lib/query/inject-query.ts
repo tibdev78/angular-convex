@@ -32,6 +32,12 @@ export interface QueryOptions<T> extends WithInjector {
   keepPreviousData?: boolean;
   /** Set to `false` to skip the SSR prefetch of this query. Defaults to `true`. */
   ssr?: boolean;
+  /**
+   * Reading the data while the query is in error throws that error (React's
+   * `throwOnError`): it reaches Angular's `ErrorHandler`, or the `@error` block
+   * of a surrounding `@defer`. Defaults to `false` (read `error()` instead).
+   */
+  throwOnError?: boolean;
 }
 
 /**
@@ -131,7 +137,7 @@ function createQuery<T>(
 
   connectReactive(injector, targetSource(name, args), sameTarget, connect);
 
-  return toConvexQuery(state);
+  return toConvexQuery(state, options.throwOnError);
 }
 
 /** Opens the live subscription and maps its callbacks to state updates. */
@@ -192,8 +198,12 @@ function serverPrefetch<T>(
 }
 
 /** Exposes a state signal as the public `ConvexQuery` shape. */
-export function toConvexQuery<T>(state: Signal<QueryState<T>>): ConvexQuery<T> {
-  const data = computed(() => state().data);
+export function toConvexQuery<T>(state: Signal<QueryState<T>>, throwOnError = false): ConvexQuery<T> {
+  const data = computed(() => {
+    const { status, data, error } = state();
+    if (throwOnError && status === 'error') throw error;
+    return data;
+  });
   const status = computed(() => state().status);
   return Object.assign(data, {
     data,

@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { injectMutation, injectQuery } from 'angular-convex';
+import { injectMutation, injectQueries, injectQuery } from 'angular-convex';
 import { api, type Id } from '../convex';
 
 type Filter = 'all' | 'active' | 'done';
@@ -34,7 +34,7 @@ type Priority = 'low' | 'medium' | 'high';
     <section class="card">
       <div class="tabs">
         @for (f of filters; track f) {
-          <button type="button" [class.active]="filter() === f" (click)="filter.set(f)" [attr.data-testid]="'filter-' + f">{{ f }}</button>
+          <button type="button" [class.active]="filter() === f" (click)="filter.set(f)" [attr.data-testid]="'filter-' + f">{{ f }} <small [attr.data-testid]="'count-' + f">{{ countOf(f) }}</small></button>
         }
         <span class="grow"></span>
         @if (stats(); as s) {
@@ -114,6 +114,15 @@ export class TodosPage {
   protected readonly results = injectQuery(api.todos.search, () =>
     this.search().trim() ? { text: this.search(), onlyActive: this.onlyActive() } : 'skip',
   );
+
+  // One subscription per filter at once (React `useQueries`), for the tab counts.
+  private readonly perFilter = injectQueries(() =>
+    Object.fromEntries(this.filters.map((f) => [f, { query: api.todos.list, args: { filter: f } }])),
+  );
+  protected countOf(f: Filter): string {
+    const list = this.perFilter()[f];
+    return Array.isArray(list) ? String(list.length) : '…';
+  }
 
   private readonly projectsById = computed(() => new Map((this.projects() ?? []).map((p) => [p._id, p.name])));
 

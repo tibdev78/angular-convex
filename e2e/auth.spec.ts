@@ -15,6 +15,8 @@ test.describe('Convex Auth', () => {
 
     await page.getByTestId('me').click();
     await expect(page.getByTestId('account-method')).toHaveText('usernamePassword');
+    // injectAuthToken: the session JWT, decoded for its expiry.
+    await expect(page.getByTestId('session-expiry')).toHaveText(/^\d\d:\d\d:\d\d$/);
     await shot(page, info, 'account');
 
     await page.getByTestId('sign-out').click();

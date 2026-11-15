@@ -6,6 +6,22 @@ export const EMBEDDING_DIMENSIONS = 32;
 
 export const priority = v.union(v.literal("low"), v.literal("medium"), v.literal("high"));
 
+/** Every value type Convex stores, used by the Lab page. */
+export const sampleFields = {
+  ownerId: v.id("users"),
+  label: v.string(),
+  counts: v.record(v.string(), v.number()),
+  payload: v.bytes(),
+  big: v.int64(),
+  extra: v.any(),
+  note: v.nullable(v.string()),
+  revision: v.number(),
+  // Resolved by Convex to the commit timestamp (write `ctx.db.vars.commitTs`).
+  committedAt: v.optional(v.commitTs()),
+  // A function handle stored in a document, scheduled later (see lab.bumpLater).
+  handle: v.optional(v.function({ fnType: "mutation", args: { id: v.id("samples"), by: v.number() }, returns: v.null() })),
+};
+
 export default defineSchema({
   // App users. Convex Auth stores credentials in its components and only
   // keeps the id of the row created by our `createUser` callbacks.
@@ -101,6 +117,12 @@ export default defineSchema({
     message: v.string(),
     value: v.number(),
   }).index("by_kind", ["kind"]),
+
+  // Lab: one field per validator kind, exercised by ./lab.ts.
+  samples: defineTable(sampleFields)
+    .index("by_owner", ["ownerId"])
+    // Commit order, unlike `_creationTime` which is set when the mutation starts.
+    .index("by_owner_commit", ["ownerId", "committedAt"]),
 
   // Written by the cron job.
   stats: defineTable({
