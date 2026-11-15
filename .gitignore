@@ -50,3 +50,6 @@ brain.local
 /test-results
 /playwright-report
 /compat/apps
+
+# Convex local backend data
+.convex/
