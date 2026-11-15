@@ -44,7 +44,10 @@ jobs:
           AUTH_GITHUB_CLIENT_ID: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_ID }}
           AUTH_GITHUB_CLIENT_SECRET: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_SECRET }}
       - run: npm run build:lib
-      - run: npx playwright test
+      - run: npx playwright test --grep-invert @secrets
+      # The test account's password would land in the trace and the HTML
+      # report, which are uploaded publicly: run it apart, list reporter only.
+      - run: npx playwright test --grep @secrets --reporter=list
         env:
           E2E_GITHUB_LOGIN: ${{ secrets.E2E_GITHUB_LOGIN }}
           E2E_GITHUB_PASSWORD: ${{ secrets.E2E_GITHUB_PASSWORD }}

@@ -1,0 +1,55 @@
+import { expect, test } from '@playwright/test';
+import { shot, totp } from './helpers';
+
+// Full round trip with a dedicated GitHub test account. Its credentials come
+// from the environment (CI secrets). The backend must run a real GitHub OAuth
+// app whose callback is this backend's /oauth/github/callback. Without them
+// the test is skipped.
+//
+// Playwright writes every `fill` value into the trace and the HTML report
+// (step title `Fill "<value>"`). So this file never records a trace, a failure
+// screenshot or a video, and CI runs it apart (tag @secrets) with the list
+// reporter only: nothing it produces is uploaded.
+test.use({ trace: 'off', screenshot: 'off', video: 'off' });
+
+test('GitHub OAuth: full round trip with the test account @secrets', async ({ page }, info) => {
+  const login = process.env['E2E_GITHUB_LOGIN'];
+  const password = process.env['E2E_GITHUB_PASSWORD'];
+  const totpSecret = process.env['E2E_GITHUB_TOTP_SECRET'];
+  // CI artifacts of a public repository are public: no screenshot of the
+  // test account's pages there.
+  const proof = process.env['CI'] ? async (_step: string) => undefined : (step: string) => shot(page, info, step);
+  test.skip(!login || !password, 'E2E_GITHUB_LOGIN / E2E_GITHUB_PASSWORD are not set');
+  test.setTimeout(90_000);
+  await page.goto('/login');
+  await page.getByTestId('tab-oauth').click();
+  await page.getByTestId('gh-signin').click();
+  await page.waitForURL(/github\.com\/login/);
+  await page.locator('#login_field').fill(login!);
+  await page.locator('#password').fill(password!);
+  await page.locator('input[name="commit"]').click();
+
+  // After the password GitHub asks for the TOTP code (2FA account), may show
+  // the authorization screen (first sign-in to the app), or goes straight back.
+  const app = /localhost:4200\/todos/;
+  for (let step = 0; step < 4 && !app.test(page.url()); step++) {
+    await page.waitForURL((url) => app.test(url.href) || /two-factor|oauth\/authorize|verified-device/.test(url.pathname), { timeout: 30_000 });
+    const path = new URL(page.url()).pathname;
+    if (path.includes('verified-device')) {
+      throw new Error('GitHub asks for an emailed device code: enable TOTP 2FA on the test account and set E2E_GITHUB_TOTP_SECRET');
+    }
+    if (path.includes('two-factor')) {
+      if (!totpSecret) throw new Error('GitHub asks for a 2FA code: set E2E_GITHUB_TOTP_SECRET');
+      await page.locator('#app_totp').fill(totp(totpSecret));
+      await page.waitForURL((url) => !url.pathname.includes('two-factor'), { timeout: 30_000 });
+    } else if (path.includes('oauth/authorize')) {
+      await proof('github-authorize');
+      await page.locator('button[name="authorize"][value="1"]').click();
+      await page.waitForURL((url) => !url.pathname.includes('oauth/authorize'), { timeout: 30_000 });
+    }
+  }
+  await expect(page).toHaveURL(app);
+  await page.goto('/account');
+  await expect(page.getByTestId('account-method')).toHaveText('github');
+  await proof('github-signed-in');
+});
