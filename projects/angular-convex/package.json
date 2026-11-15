@@ -3,10 +3,20 @@
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/common": "^22.2.0",
-    "@angular/core": "^22.2.0"
+    "@angular/core": "^22.2.0",
+    "@convex-dev/auth": "^2.0.0",
+    "@simplewebauthn/browser": "^14.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "peerDependenciesMeta": {
+    "@convex-dev/auth": {
+      "optional": true
+    },
+    "@simplewebauthn/browser": {
+      "optional": true
+    }
+  }
 }

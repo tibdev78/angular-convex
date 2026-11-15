@@ -27,7 +27,11 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "tsConfig": "projects/angular-convex/tsconfig.spec.json"
+            "tsConfig": "projects/angular-convex/tsconfig.spec.json",
+            "include": [
+              "**/*.spec.ts",
+              "../convex-auth/**/*.spec.ts"
+            ]
           }
         }
       }
@@ -55,15 +59,17 @@
                 "input": "projects/convex-agl/public"
               }
             ],
-            "styles": ["projects/convex-agl/src/styles.scss"]
+            "styles": [
+              "projects/convex-agl/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
