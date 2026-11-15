@@ -22,7 +22,9 @@ fail() { echo "$1" >&2; cat "$log" >&2; exit 1; }
 nohup npx convex dev --tail-logs disable > "$log" 2>&1 &
 
 wait_for 180 npx convex env list || fail "Convex backend did not start"
-npx convex env set AUTH_GITHUB_CLIENT_ID "${AUTH_GITHUB_CLIENT_ID:-ci-placeholder}"
-npx convex env set AUTH_GITHUB_CLIENT_SECRET "${AUTH_GITHUB_CLIENT_SECRET:-ci-placeholder}"
+# Setting a variable can hit a write conflict while the first push and the
+# crons start (503 OptimisticConcurrencyControlFailure): retry it.
+wait_for 30 npx convex env set AUTH_GITHUB_CLIENT_ID "${AUTH_GITHUB_CLIENT_ID:-ci-placeholder}" || fail "Could not set AUTH_GITHUB_CLIENT_ID"
+wait_for 30 npx convex env set AUTH_GITHUB_CLIENT_SECRET "${AUTH_GITHUB_CLIENT_SECRET:-ci-placeholder}" || fail "Could not set AUTH_GITHUB_CLIENT_SECRET"
 wait_for 180 grep -qs "Convex functions ready" "$log" || fail "Convex functions were not pushed"
 echo "Convex backend ready"
