@@ -1,0 +1,9 @@
+.top { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-6); background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.brand { color: var(--primary); }
+nav { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+nav a { text-decoration: none; color: var(--muted); padding: var(--space-1) var(--space-2); border-radius: var(--radius); }
+nav a.active { background: var(--surface-2); color: var(--text); }
+.grow { flex: 1; }
+.conn { font-size: 0.8rem; padding: 2px var(--space-2); border-radius: 999px; background: #fee2e2; color: var(--danger); }
+.conn.on { background: #dcfce7; color: var(--success); }
+main { max-width: 960px; margin: 0 auto; padding: var(--space-6) var(--space-4); }

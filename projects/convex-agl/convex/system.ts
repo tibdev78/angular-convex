@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { action, internalMutation, mutation, query } from "./_generated/server";
+import { action, env, internalMutation, mutation, query } from "./_generated/server";
 import { requireUserId } from "./lib";
 
 /** Written every minute by the cron in ./crons.ts. */
@@ -46,7 +46,7 @@ export const fail = mutation({
 export const ping = action({
   args: {},
   handler: async (_ctx): Promise<{ ok: boolean; status: number; body: string }> => {
-    const site = process.env.CONVEX_SITE_URL;
+    const site = env.CONVEX_SITE_URL;
     if (!site) return { ok: false, status: 0, body: "CONVEX_SITE_URL is not set" };
     const res = await fetch(`${site}/api/health`);
     return { ok: res.ok, status: res.status, body: await res.text() };

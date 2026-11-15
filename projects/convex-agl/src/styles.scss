@@ -1,1 +1,55 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #eef0f6;
+  --text: #1c1f2a;
+  --muted: #646a7d;
+  --border: #dcdfe8;
+  --primary: #4f46e5;
+  --primary-text: #ffffff;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --radius: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); }
+h1 { font-size: 1.4rem; margin: 0 0 var(--space-4); }
+h2 { font-size: 1.1rem; margin: var(--space-4) 0 var(--space-2); }
+a { color: var(--primary); }
+code, pre { font-family: var(--mono); font-size: 0.85rem; }
+pre { background: var(--surface-2); padding: var(--space-3); border-radius: var(--radius); overflow: auto; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); margin-bottom: var(--space-4); }
+.row { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.grow { flex: 1; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.error { color: var(--danger); }
+.ok { color: var(--success); }
+.badge { display: inline-block; padding: 2px var(--space-2); border-radius: 999px; background: var(--surface-2); font-size: 0.75rem; }
+.badge.high { background: #fee2e2; color: var(--danger); }
+.badge.medium { background: #fef3c7; color: var(--warning); }
+.badge.low { background: #dcfce7; color: var(--success); }
+
+input, select, textarea, button { font: inherit; }
+input, select, textarea { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+button { padding: var(--space-2) var(--space-4); border: 1px solid var(--primary); border-radius: var(--radius); background: var(--primary); color: var(--primary-text); cursor: pointer; }
+button.ghost { background: transparent; color: var(--primary); }
+button.danger { border-color: var(--danger); background: transparent; color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: default; }
+ul.list { list-style: none; padding: 0; margin: 0; }
+ul.list > li { display: flex; gap: var(--space-2); align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
+ul.list > li:last-child { border-bottom: none; }
+.done { text-decoration: line-through; color: var(--muted); }
+.tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+.tabs button { background: transparent; color: var(--text); border-color: var(--border); }
+.tabs button.active { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }

@@ -53,3 +53,5 @@ brain.local
 
 # Convex local backend data
 .convex/
+e2e/report/
+test-results/
