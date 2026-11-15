@@ -1,5 +1,7 @@
 # angular-convex
 
+[![CI](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml)
+
 Angular bindings for [Convex](https://convex.dev). This repository contains:
 
 | Path | What |
@@ -81,11 +83,21 @@ compat/run.sh                                      # one `ng new` app per row, b
 npx playwright test -c compat/playwright.config.ts # runs each build against the backend
 ```
 
-The script needs [fnm](https://github.com/Schniz/fnm) and the Node versions it lists. The rows are `angular:node:convex`, for example `compat/run.sh 19:20:1.48.0`. Results go to [`compat/RESULTS.md`](compat/RESULTS.md). Run it again for every new Angular major.
+The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; otherwise the Node on `PATH` must match the row. It exits non-zero if any row fails. The rows are `angular:node:convex`, for example `compat/run.sh 19:20:1.48.0`. Results go to [`compat/RESULTS.md`](compat/RESULTS.md). Run it again for every new Angular major.
 
 | Angular 17 on Node 20 | Angular 22 on Node 24 |
 |---|---|
 | ![ng17](docs/screenshots/compat-ng17.png) | ![ng22](docs/screenshots/compat-ng22.png) |
+
+### Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs three jobs on every push and pull request:
+
+- **library**: builds the library, runs the unit tests and packs the tarball;
+- **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)) and runs the whole Playwright suite;
+- **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
+
+No secret is needed. GitHub OAuth is only tested up to the redirect, so a placeholder client id is enough.
 
 ## License
 

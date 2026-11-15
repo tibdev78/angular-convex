@@ -60,3 +60,4 @@ compat/*.tgz
 compat/screenshots/
 compat/test-results/
 compat/apps/
+convex-dev.log

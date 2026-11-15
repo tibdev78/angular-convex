@@ -91,10 +91,11 @@ test.describe('Demo features', () => {
     await expect(page.getByTestId('chat-message').filter({ hasText: text })).toBeVisible();
     await shot(page, info, 'message-received-live');
 
-    await page.getByTestId('chat-input').fill('with a picture');
+    const caption = `with a picture from ${bob}`;
+    await page.getByTestId('chat-input').fill(caption);
     await page.getByTestId('chat-file').setInputFiles({ name: 'red.png', mimeType: 'image/png', buffer: png(220, 40, 40) });
     await page.getByTestId('chat-send').click();
-    const withImage = other.getByTestId('chat-message').filter({ hasText: 'with a picture' });
+    const withImage = other.getByTestId('chat-message').filter({ hasText: caption });
     await expect(withImage.locator('img')).toBeVisible();
     await shot(other, info, 'image-received-live');
 

@@ -22,6 +22,14 @@ tarball="$(ls "$here"/angular-convex-*.tgz 2>/dev/null | tail -1)"
 rows=("${@:-17:20:1.48.0 18:20:1.48.0 19:20:1.48.0 20:20:1.48.0 21:20:1.48.0 21:24:1.50.0 22:22:1.50.0 22:24:1.50.0}")
 read -r -a rows <<< "${rows[*]}"
 
+# fnm switches Node per row; without it (CI), the Node on PATH must match the row.
+with_node() {
+  if command -v fnm > /dev/null; then fnm exec --using="$node" -- "$@"
+  elif [ "$(node -p 'process.versions.node.split(".")[0]')" = "$node" ]; then "$@"
+  else echo "Row needs Node $node: install fnm or put Node $node on PATH." >&2; return 1; fi
+}
+
+failed=0
 mkdir -p "$apps"
 summary="$here/RESULTS.md"
 {
@@ -34,7 +42,7 @@ for row in "${rows[@]}"; do
   name="ng${ng}-node${node}"
   dir="$apps/$name"
   log="$apps/$name.log"
-  run() { fnm exec --using="$node" -- "$@" >> "$log" 2>&1; }
+  run() { with_node "$@" >> "$log" 2>&1; }
   : > "$log"
   echo "== $name (convex $cvx)"
   create=ok install=ok build=ok
@@ -50,8 +58,10 @@ for row in "${rows[@]}"; do
     (cd "$dir" && CI=1 run npx ng build) || build=FAIL
   else build=skip; fi
   ts="$(cd "$dir" 2>/dev/null && node -p "require('typescript/package.json').version" 2>/dev/null || echo '?')"
-  nodev="$(fnm exec --using="$node" -- node -v)"
+  nodev="$(with_node node -v 2>/dev/null || echo "Node $node missing")"
+  [ "$build" = ok ] || failed=1
   echo "| $ng | $nodev | $cvx | $ts | $create | $install | $build |" | tee -a "$summary.tmp"
 done
 mv "$summary.tmp" "$summary"
 echo "Summary: $summary"
+exit "$failed"
