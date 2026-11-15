@@ -20,12 +20,13 @@ try {
   await page.locator('input[name="commit"]').click();
   await page.waitForLoadState('load');
   const path = new URL(page.url()).pathname;
-  if (path === '/session') {
-    const flash = (await page.locator('.flash-error, .js-flash-alert').allInnerTexts()).join(' ').trim();
-    console.log(`REFUSED (${flash}) · password length ${password.length}`);
+  const flash = (await page.locator('.flash-error, .js-flash-alert').allInnerTexts()).join(' ').trim();
+  // Only a 2FA / device-verification page proves the password: staying on
+  // /login or /session (a block, an empty value) is not an acceptance.
+  if (!/two-factor|verified-device|sessions\/verify/.test(path)) {
+    console.log(`NOT CONFIRMED (${path}${flash ? ` · ${flash}` : ''}) · password length ${password.length}`);
     process.exitCode = 1;
   } else {
-    // A 2FA or device-verification page means the password was accepted.
     console.log(`ACCEPTED · next page ${path}`);
   }
 } finally {
