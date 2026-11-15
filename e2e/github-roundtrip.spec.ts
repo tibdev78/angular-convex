@@ -54,6 +54,9 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
     }
     if (path.includes('two-factor')) {
       if (totpSecret) {
+        // The account may prefer passkeys (/sessions/two-factor/webauthn):
+        // switch to the authenticator-app form, which is always offered.
+        if (!path.endsWith('/two-factor/app')) await page.goto('https://github.com/sessions/two-factor/app');
         await page.locator('#app_totp').fill(totp(totpSecret));
       } else if (process.env['CI']) {
         throw new Error('GitHub asks for a 2FA code: set E2E_GITHUB_TOTP_SECRET');
