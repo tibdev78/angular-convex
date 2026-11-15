@@ -83,6 +83,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "cloud": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "projects/convex-agl/src/environments/environment.ts",
+                  "with": "projects/convex-agl/src/environments/environment.cloud.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -95,6 +106,9 @@
             },
             "development": {
               "buildTarget": "convex-agl:build:development"
+            },
+            "cloud": {
+              "buildTarget": "convex-agl:build:cloud"
             }
           },
           "defaultConfiguration": "development"

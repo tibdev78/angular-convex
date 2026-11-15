@@ -49,7 +49,6 @@ brain.local
 .env
 /test-results
 /playwright-report
-/compat/apps
 
 # Convex local backend data
 .convex/
@@ -57,3 +56,7 @@ e2e/report/
 test-results/
 # Raw e2e evidence (curated copies live in docs/screenshots)
 e2e/screenshots/
+compat/*.tgz
+compat/screenshots/
+compat/test-results/
+compat/apps/

@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * End-to-end tests of the convex-agl demo against a real Convex deployment.
  * Start the backend first: `CONVEX_AGENT_MODE=anonymous npx convex dev`.
+ * `E2E_CONFIG=cloud` serves the demo against the cloud deployment instead.
  * Screenshots of every step land in `e2e/screenshots/`.
  */
 export default defineConfig({
@@ -20,7 +21,7 @@ export default defineConfig({
   // Uses the installed Google Chrome (no browser download); set PW_CHANNEL=chromium for Playwright's own build.
   projects: [{ name: 'chrome', use: { ...devices['Desktop Chrome'], channel: process.env['PW_CHANNEL'] ?? 'chrome' } }],
   webServer: {
-    command: 'npx ng serve convex-agl --port 4200',
+    command: `npx ng serve convex-agl --port 4200 -c ${process.env['E2E_CONFIG'] ?? 'development'}`,
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     timeout: 180_000,

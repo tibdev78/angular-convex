@@ -2,7 +2,7 @@ import { expect, type Page, type TestInfo } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SHOTS = join(__dirname, 'screenshots');
+const SHOTS = join(__dirname, 'screenshots', process.env['E2E_CONFIG'] === 'cloud' ? 'cloud' : '');
 mkdirSync(SHOTS, { recursive: true });
 
 /** A run-unique suffix, so tests never collide with data from earlier runs. */

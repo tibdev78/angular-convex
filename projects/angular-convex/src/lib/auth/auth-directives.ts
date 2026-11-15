@@ -1,4 +1,4 @@
-import { Directive, effect, inject, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, effect, inject, TemplateRef, untracked, ViewContainerRef } from '@angular/core';
 import { ConvexAuthService, type ConvexAuthState } from './convex-auth';
 
 function renderWhen(predicate: (state: ConvexAuthState) => boolean): void {
@@ -8,9 +8,11 @@ function renderWhen(predicate: (state: ConvexAuthState) => boolean): void {
   let shown = false;
   effect(() => {
     const visible = predicate(auth.state());
-    if (visible && !shown) container.createEmbeddedView(template);
-    if (!visible && shown) container.clear();
+    if (visible === shown) return;
     shown = visible;
+    // Untracked: signals read while building the child view must not become
+    // dependencies of this effect (nor count as writes inside it on Angular < 19).
+    untracked(() => (visible ? container.createEmbeddedView(template) : container.clear()));
   });
 }
 
