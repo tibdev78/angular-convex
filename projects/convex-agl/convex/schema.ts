@@ -124,6 +124,15 @@ export default defineSchema({
     // Commit order, unlike `_creationTime` which is set when the mutation starts.
     .index("by_owner_commit", ["ownerId", "committedAt"]),
 
+  // Application audit trail: every log.audit is also written here, because
+  // Convex keeps durable audit logs only on Enterprise.
+  auditEvents: defineTable({
+    actorId: v.id("users"),
+    action: v.string(),
+    source: v.union(v.literal("mutation"), v.literal("action")),
+    detail: v.any(),
+  }).index("by_actor", ["actorId"]),
+
   // Written by the cron job.
   stats: defineTable({
     key: v.string(),

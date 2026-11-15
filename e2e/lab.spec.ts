@@ -119,6 +119,8 @@ test.describe('Lab: remaining server primitives', () => {
     await page.getByTestId('lab-audit').click();
     await expect(page.getByTestId('lab-audit-result')).toContainText('"ok": true');
     await expect(page.getByTestId('lab-audit-result')).toContainText('"value": "recorded"');
+    const trail = page.getByTestId('lab-audit-trail');
+    await expect(trail.locator('li').first()).toHaveText('lab.audit · mutation');
     await page.getByTestId('lab-platform').click();
     const platform = page.getByTestId('lab-platform-result');
     await expect(platform).toContainText('"metadata"');
@@ -134,8 +136,12 @@ test.describe('Lab: remaining server primitives', () => {
         ? /token of \d+ chars/
         : /token of \d+ chars|requires an authenticated local deployment|AI gateway is not enabled for your team/,
     );
-    // Audit logging is refused in actions by every deployment.
+    // An action audits through ctx.runMutation; a direct log.audit in an
+    // action is refused by every deployment.
+    await expect(platform).toContainText(/"audit": \{\s*"ok": true,\s*"value": "recorded \\"lab\.platform\\" via ctx\.runMutation"/);
     await expect(platform).toContainText('Audit logging is not yet supported in actions');
+    // Both events are in the live audit trail, newest first.
+    await expect(trail.locator('li')).toHaveText(['lab.platform · action', 'lab.audit · mutation']);
     await shot(page, info, 'platform-probes');
   });
 });

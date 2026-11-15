@@ -140,6 +140,10 @@ function parseCounts(text: string): Record<string, number> {
       </div>
       <pre data-testid="lab-audit-result">{{ audit.data() | json }}</pre>
       <pre data-testid="lab-platform-result">{{ platform.data() | json }}</pre>
+      <p class="muted">Convex keeps <code>log.audit</code> durably only on Enterprise, and refuses it inside actions: an action audits through <code>ctx.runMutation</code>. Every event is also written to the <code>auditEvents</code> table, read live here.</p>
+      <ul data-testid="lab-audit-trail">
+        @for (e of auditTrail() ?? []; track e.id) { <li>{{ e.action }} · {{ e.source }}</li> } @empty { <li class="muted">No audit event yet.</li> }
+      </ul>
     </section>
 
     <section class="card">
@@ -170,6 +174,7 @@ export class LabPage {
   protected readonly page = injectPaginatedQuery(api.lab.page, {}, { initialNumItems: 2 });
   protected readonly normalized = injectQuery(api.lab.normalize, () => (this.rawId() ? { id: this.rawId() } : 'skip'));
   protected readonly cronStats = injectQuery(api.lab.cronStats);
+  protected readonly auditTrail = injectQuery(api.lab.auditTrail);
   protected readonly scheduled = injectQuery(api.lab.scheduledBumps);
   protected readonly failing = injectQuery(api.lab.boom, { code: 'LAB_FAILURE' });
   private readonly failingThrows = injectQuery(api.lab.boom, { code: 'LAB_THROWN' }, { throwOnError: true });

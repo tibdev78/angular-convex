@@ -10,8 +10,8 @@
  * - actions: ctx.runAction into the Node runtime ("use node", ./node.ts), ctx.storage.store
  */
 import { ConvexError, getDocumentSize, v } from "convex/values";
-import { createFunctionHandle, type GenericDatabaseWriterWithTable, type FunctionHandle, getServiceToken, getServiceUrl, log, paginationOptsValidator, paginationResultValidator } from "convex/server";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { createFunctionHandle, type GenericDatabaseWriterWithTable, type FunctionHandle, getServiceToken, getServiceUrl, log, type AuditLogValue, paginationOptsValidator, paginationResultValidator } from "convex/server";
+import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import schema, { sampleFields } from "./schema";
@@ -272,11 +272,16 @@ const probe = async (run: () => Promise<string>): Promise<Probe> => {
  */
 export const platform = action({
   args: {},
-  handler: async (ctx): Promise<{ audit: Probe; serviceUrl: Probe; serviceToken: Probe; metadata: Probe }> => {
+  handler: async (ctx): Promise<{ audit: Probe; auditDirect: Probe; serviceUrl: Probe; serviceToken: Probe; metadata: Probe }> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError({ code: "NOT_AUTHENTICATED" });
-    const audit = await probe(async () => {
-      await log.audit({ action: "lab.platform", actor: log.vars.convexActor, ip: log.vars.ip, at: log.vars.now });
+    // Convex refuses `log.audit` inside an action ("Audit logging is not yet
+    // supported in actions"). An action audits through a mutation instead: the
+    // caller's identity carries over, so `log.vars.convexActor` is still the user.
+    const audit = await probe(() => ctx.runMutation(internal.lab.auditEvent, { action: "lab.platform", detail: { from: "action" } }));
+    // The direct call, kept to show what Convex answers.
+    const auditDirect = await probe(async () => {
+      await log.audit({ action: "lab.platform.direct", actor: log.vars.convexActor, at: log.vars.now });
       return "recorded";
     });
     const serviceUrl = await probe(() => getServiceUrl("ai-gateway"));
@@ -289,7 +294,7 @@ export const platform = action({
       await ctx.storage.delete(id);
       return `size ${meta?.size} · ${meta?.contentType} · sha256 ${meta?.sha256.slice(0, 8)}…`;
     });
-    return { audit, serviceUrl, serviceToken, metadata };
+    return { audit, auditDirect, serviceUrl, serviceToken, metadata };
   },
 });
 
@@ -313,22 +318,47 @@ export const viaTable = mutation({
   },
 });
 
+/**
+ * Emits `log.audit` and writes the same event to the `auditEvents` table.
+ * Convex only keeps `log.audit` durably on Enterprise; the table is the trail
+ * any plan can read.
+ */
+async function recordAudit(ctx: MutationCtx, action: string, source: "mutation" | "action", detail: unknown): Promise<string> {
+  const actorId = await requireUserId(ctx);
+  await log.audit({
+    action,
+    requestId: log.vars.requestId,
+    actor: log.vars.convexActor,
+    ip: log.vars.ip,
+    userAgent: log.vars.userAgent,
+    at: log.vars.now,
+    detail: (detail ?? null) as AuditLogValue,
+  });
+  await ctx.db.insert("auditEvents", { actorId, action, source, detail: detail ?? null });
+  return source === "action" ? `recorded "${action}" via ctx.runMutation` : "recorded";
+}
+
+/**
+ * Audits on behalf of an action (`ctx.runMutation`): `log.audit` only runs in
+ * queries and mutations. The caller's identity carries over.
+ */
+export const auditEvent = internalMutation({
+  args: { action: v.string(), detail: v.optional(v.any()) },
+  handler: (ctx, { action, detail }): Promise<string> => recordAudit(ctx, action, "action", detail),
+});
+
+/** The signed-in user's latest audit events, newest first. */
+export const auditTrail = query({
+  args: {},
+  handler: async (ctx) => {
+    const actorId = await requireUserId(ctx);
+    const events = await ctx.db.query("auditEvents").withIndex("by_actor", (q) => q.eq("actorId", actorId)).order("desc").take(5);
+    return events.map((e) => ({ id: e._id, action: e.action, source: e.source }));
+  },
+});
+
 /** `log.audit` from a mutation, with every `log.vars` placeholder. */
 export const audit = mutation({
   args: {},
-  handler: async (ctx): Promise<Probe> => {
-    await requireUserId(ctx);
-    return probe(async () => {
-      await log.audit({
-        action: "lab.audit",
-        requestId: log.vars.requestId,
-        actor: log.vars.convexActor,
-        ip: log.vars.ip,
-        userAgent: log.vars.userAgent,
-        at: log.vars.now,
-        detail: { nested: [1, "two", true] },
-      });
-      return "recorded";
-    });
-  },
+  handler: (ctx): Promise<Probe> => probe(() => recordAudit(ctx, "lab.audit", "mutation", { nested: [1, "two", true] })),
 });
