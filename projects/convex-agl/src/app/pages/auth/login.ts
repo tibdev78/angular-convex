@@ -1,13 +1,15 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { injectConvexAuth } from 'angular-convex';
+import { injectConvexAuth, injectQuery } from 'angular-convex';
 import {
   injectOauth,
   injectOauthSignIn,
   injectSignInWithEmailPassword,
   injectSignInAnonymously,
+  injectSignInWithApple,
   injectSignInWithGithub,
+  injectSignInWithGoogle,
   injectSignInWithUsernamePasskey,
   injectSignInWithUsernamePassword,
   injectSignUpWithEmailPassword,
@@ -25,7 +27,7 @@ type Method = 'username' | 'email' | 'passkey' | 'oauth' | 'anonymous';
   imports: [FormsModule, RouterLink],
   template: `
     <h1>Sign in</h1>
-    <p class="muted">Six Convex Auth methods, all handled by <code>angular-convex/convex-auth</code>.</p>
+    <p class="muted">Eight Convex Auth methods, all handled by <code>angular-convex/convex-auth</code>.</p>
     <nav class="tabs" data-testid="login-tabs">
       @for (m of methods; track m[0]) {
         <button type="button" [class.active]="method() === m[0]" (click)="method.set(m[0])" [attr.data-testid]="'tab-' + m[0]">
@@ -81,6 +83,12 @@ type Method = 'username' | 'email' | 'passkey' | 'oauth' | 'anonymous';
           <div class="stack">
             <button type="button" (click)="github()" data-testid="gh-signin">Continue with GitHub</button>
             <p class="muted">Redirects to GitHub, back to the deployment's <code>/oauth/github/callback</code>, then here with a one-time code.</p>
+            <button type="button" (click)="google()" [disabled]="providers()?.google === false" data-testid="google-signin">Continue with Google</button>
+            <p class="muted">OpenID Connect: Google's signed <code>id_token</code> is checked by the deployment's <code>/oauth/google/callback</code>.
+              @if (providers()?.google === false) { <span data-testid="google-unconfigured">Not configured on this deployment (<code>AUTH_GOOGLE_*</code>).</span> }</p>
+            <button type="button" (click)="apple()" [disabled]="providers()?.apple === false" data-testid="apple-signin">Continue with Apple</button>
+            <p class="muted">Sign in with Apple, via the deployment's <code>/oauth/apple/callback</code> (a public HTTPS deployment: Apple refuses localhost).
+              @if (providers()?.apple === false) { <span data-testid="apple-unconfigured">Not configured on this deployment: set the four <code>AUTH_APPLE_*</code> variables (Apple Developer account).</span> }</p>
             <button type="button" (click)="demoIdp()" data-testid="idp-signin">Continue with the demo OIDC provider</button>
             <p class="muted">An OpenID Connect provider served by the backend itself (<code>/idp/*</code>): consent page, PKCE,
               signed <code>id_token</code>, then the same one-time code protocol. A custom method built with <code>bindMethod</code>.</p>
@@ -129,6 +137,10 @@ export class LoginPage {
   protected readonly passkey = injectSignInWithUsernamePasskey(api.auth);
   protected readonly oauth = injectOauth();
   private readonly githubSignIn = injectSignInWithGithub(api.auth);
+  private readonly googleSignIn = injectSignInWithGoogle(api.auth);
+  private readonly appleSignIn = injectSignInWithApple(api.auth);
+  /** Which providers have credentials on this deployment. */
+  protected readonly providers = injectQuery(api.auth.oauthProviders, () => ({}));
   /** Any provider exporting the two OAuth mutations works with the generic hook. */
   private readonly demoIdpSignIn = injectOauthSignIn({
     providerName: 'demoIdp',
@@ -181,6 +193,14 @@ export class LoginPage {
 
   protected github(): void {
     void this.githubSignIn.signIn({ redirectTo: this.backHere() });
+  }
+
+  protected google(): void {
+    void this.googleSignIn.signIn({ redirectTo: this.backHere() });
+  }
+
+  protected apple(): void {
+    void this.appleSignIn.signIn({ redirectTo: this.backHere() });
   }
 
   protected demoIdp(): void {

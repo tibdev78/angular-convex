@@ -87,6 +87,8 @@ export declare const components: {
   authEmail: import("@convex-dev/auth/components/email/_generated/component.js").ComponentApi<"authEmail">;
   authPasskey: import("@convex-dev/auth/components/passkey/_generated/component.js").ComponentApi<"authPasskey">;
   authGithub: import("@convex-dev/auth/components/github/_generated/component.js").ComponentApi<"authGithub">;
+  authGoogle: import("@convex-dev/auth/components/google/_generated/component.js").ComponentApi<"authGoogle">;
+  authApple: import("@convex-dev/auth/components/apple/_generated/component.js").ComponentApi<"authApple">;
   resend: import("../resend/_generated/component.js").ComponentApi<"resend">;
   demoAuth: import("../demoAuth/_generated/component.js").ComponentApi<"demoAuth">;
 };

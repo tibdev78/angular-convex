@@ -4,9 +4,9 @@
 # output goes to $CONVEX_LOG (default: convex-dev.log).
 #
 # On a fresh checkout the deployment only exists once `convex dev` has created
-# it, so the environment variables are set after it starts. GitHub OAuth is only
-# exercised up to the redirect: placeholder credentials are enough unless real
-# ones are provided in the environment.
+# it, so the environment variables are set after it starts. GitHub and Google
+# OAuth are only exercised up to the redirect: placeholder credentials are
+# enough unless real ones are provided in the environment.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 log="${CONVEX_LOG:-convex-dev.log}"
@@ -26,5 +26,11 @@ wait_for 180 npx convex env list || fail "Convex backend did not start"
 # crons start (503 OptimisticConcurrencyControlFailure): retry it.
 wait_for 30 npx convex env set AUTH_GITHUB_CLIENT_ID "${AUTH_GITHUB_CLIENT_ID:-ci-placeholder}" || fail "Could not set AUTH_GITHUB_CLIENT_ID"
 wait_for 30 npx convex env set AUTH_GITHUB_CLIENT_SECRET "${AUTH_GITHUB_CLIENT_SECRET:-ci-placeholder}" || fail "Could not set AUTH_GITHUB_CLIENT_SECRET"
+wait_for 30 npx convex env set AUTH_GOOGLE_CLIENT_ID "${AUTH_GOOGLE_CLIENT_ID:-ci-placeholder}" || fail "Could not set AUTH_GOOGLE_CLIENT_ID"
+wait_for 30 npx convex env set AUTH_GOOGLE_CLIENT_SECRET "${AUTH_GOOGLE_CLIENT_SECRET:-ci-placeholder}" || fail "Could not set AUTH_GOOGLE_CLIENT_SECRET"
+# Sign in with Apple stays "not-configured" (the login page shows it as unavailable).
+for name in AUTH_APPLE_CLIENT_ID AUTH_APPLE_TEAM_ID AUTH_APPLE_KEY_ID AUTH_APPLE_PRIVATE_KEY; do
+  wait_for 30 npx convex env set "$name" "${!name:-not-configured}" || fail "Could not set $name"
+done
 wait_for 180 grep -qs "Convex functions ready" "$log" || fail "Convex functions were not pushed"
 echo "Convex backend ready"

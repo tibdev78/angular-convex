@@ -1,7 +1,7 @@
 import { v, type ObjectType, type PropertyValidators, type Validator } from "convex/values";
 import type { FunctionReference, GenericMutationCtx, RegisteredMutation } from "convex/server";
 import { components, internal } from "./_generated/api";
-import { env } from "./_generated/server";
+import { env, query } from "./_generated/server";
 import type { DataModel } from "./_generated/dataModel";
 import { DEMO_IDP_CLIENT_ID, callbackUrl, pkceChallenge, randomToken, sha256Hex, siteOrigin } from "./idp";
 import { setupConvexAuth } from "@convex-dev/auth/server";
@@ -9,6 +9,8 @@ import { setupUsernamePassword } from "@convex-dev/auth/methods/username-passwor
 import { setupEmailPassword } from "@convex-dev/auth/methods/email-password/server";
 import { setupUsernamePasskey } from "@convex-dev/auth/methods/username-passkey/server";
 import { setupGithub } from "@convex-dev/auth/methods/github/server";
+import { setupGoogle } from "@convex-dev/auth/methods/google/server";
+import { setupApple } from "@convex-dev/auth/methods/apple/server";
 
 /** Public origin of the Angular demo. */
 const SITE_URL = env.SITE_URL ?? "http://localhost:4200";
@@ -89,6 +91,40 @@ export const { startSignInWithGithub, completeSignInWithGithub } = setupGithub(a
 }).attachUserCallbacks({
   createUser: internal.users.createUserGithub,
   onSignIn: internal.users.onSignInGithub,
+});
+
+// 4b. Google (OpenID Connect). Callback: <deployment site url>/oauth/google/callback.
+export const { startSignInWithGoogle, completeSignInWithGoogle } = setupGoogle(auth, {
+  component: components.authGoogle,
+  allowedRedirectOrigins: [site.origin],
+}).attachUserCallbacks({
+  createUser: internal.users.createUserGoogle,
+  onSignIn: internal.users.onSignInGoogle,
+});
+
+// 4c. Sign in with Apple. Callback: <deployment site url>/oauth/apple/callback
+// (Apple refuses localhost, so only a cloud deployment can complete it).
+export const { startSignInWithApple, completeSignInWithApple } = setupApple(auth, {
+  component: components.authApple,
+  allowedRedirectOrigins: [site.origin],
+}).attachUserCallbacks({
+  createUser: internal.users.createUserApple,
+  onSignIn: internal.users.onSignInApple,
+});
+
+/** Marks an OAuth provider whose credentials are not set up yet. */
+export const NOT_CONFIGURED = "not-configured";
+const configured = (...values: Array<string | undefined>) => values.every((value) => !!value && value !== NOT_CONFIGURED);
+
+/** Which OAuth providers have credentials on this deployment, for the login page. */
+export const oauthProviders = query({
+  args: {},
+  returns: v.object({ github: v.boolean(), google: v.boolean(), apple: v.boolean() }),
+  handler: async () => ({
+    github: configured(env.AUTH_GITHUB_CLIENT_ID, env.AUTH_GITHUB_CLIENT_SECRET),
+    google: configured(env.AUTH_GOOGLE_CLIENT_ID, env.AUTH_GOOGLE_CLIENT_SECRET),
+    apple: configured(env.AUTH_APPLE_CLIENT_ID, env.AUTH_APPLE_TEAM_ID, env.AUTH_APPLE_KEY_ID, env.AUTH_APPLE_PRIVATE_KEY),
+  }),
 });
 
 // 5 and 6. Custom sign-in methods, built on the core's `bindMethod`: the API

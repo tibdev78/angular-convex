@@ -140,6 +140,40 @@ test.describe('Convex Auth', () => {
     await shot(page, info, 'github-login');
   });
 
+  test('Google OAuth: OpenID Connect redirect with PKCE to accounts.google.com', async ({ page }, info) => {
+    await page.goto('/login');
+    await page.getByTestId('tab-oauth').click();
+    await page.getByTestId('google-signin').click();
+    await page.waitForURL(/accounts\.google\.com/);
+    const url = new URL(page.url());
+    // Google may wrap the authorize request in its sign-in pages; the query
+    // carries it either way.
+    const query = url.searchParams.get('continue') ? new URL(url.searchParams.get('continue')!).searchParams : url.searchParams;
+    const params = query.get('redirect_uri') ? query : url.searchParams;
+    expect(params.get('redirect_uri')).toMatch(/\/oauth\/google\/callback$/);
+    expect(params.get('code_challenge_method')).toBe('S256');
+    expect(params.get('scope')).toContain('openid');
+    expect(params.get('client_id')).toBeTruthy();
+    await shot(page, info, 'google-account-chooser');
+  });
+
+  test('Apple OAuth: unavailable until the AUTH_APPLE_* variables are set, then redirects to Apple', async ({ page }, info) => {
+    await page.goto('/login');
+    await page.getByTestId('tab-oauth').click();
+    const apple = page.getByTestId('apple-signin');
+    // Wait for the oauthProviders query to answer before reading the state.
+    await expect(page.getByTestId('google-signin')).toBeEnabled();
+    if (await apple.isDisabled()) {
+      await expect(page.getByTestId('apple-unconfigured')).toContainText('AUTH_APPLE_');
+      await shot(page, info, 'apple-not-configured');
+      return;
+    }
+    await apple.click();
+    await page.waitForURL(/appleid\.apple\.com/);
+    expect(new URL(page.url()).searchParams.get('redirect_uri')).toMatch(/\/oauth\/apple\/callback$/);
+    await shot(page, info, 'apple-authorize');
+  });
+
   test('GitHub OAuth: an error returned by the callback is shown', async ({ page }, info) => {
     await page.goto('/login?convexAuthError=access_denied');
     await page.getByTestId('tab-oauth').click();

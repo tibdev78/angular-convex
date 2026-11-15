@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { vGithubProfile } from "@convex-dev/auth/methods/github/server";
+import { vGoogleProfile } from "@convex-dev/auth/methods/google/server";
+import { vAppleProfile } from "@convex-dev/auth/methods/apple/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { components } from "./_generated/api";
 import { internalMutation, mutation, query, type MutationCtx } from "./_generated/server";
@@ -72,6 +74,43 @@ export const onSignInGithub = internalMutation({
     await ctx.db.patch(userId, { avatarUrl: profile.avatarUrl, username: profile.login });
     return touch(ctx, userId);
   },
+});
+
+export const createUserGoogle = internalMutation({
+  args: { method: method("google", vGoogleProfile) },
+  returns: v.id("users"),
+  handler: (ctx, { method: { profile } }) =>
+    ctx.db.insert("users", {
+      name: profile.name,
+      method: "google",
+      email: profile.emailVerified ? profile.email : undefined,
+      avatarUrl: profile.picture,
+    }),
+});
+export const onSignInGoogle = internalMutation({
+  args: { method: method("google", vGoogleProfile), userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { method: { profile }, userId }) => {
+    await ctx.db.patch(userId, { avatarUrl: profile.picture });
+    return touch(ctx, userId);
+  },
+});
+
+// Apple sends the user's name only on the first authorization: keep it then.
+export const createUserApple = internalMutation({
+  args: { method: method("apple", vAppleProfile) },
+  returns: v.id("users"),
+  handler: (ctx, { method: { profile } }) =>
+    ctx.db.insert("users", {
+      name: profile.name ?? "Apple user",
+      method: "apple",
+      email: profile.emailVerified ? profile.email : undefined,
+    }),
+});
+export const onSignInApple = internalMutation({
+  args: { method: method("apple", vAppleProfile), userId: v.id("users") },
+  returns: v.null(),
+  handler: (ctx, { userId }) => touch(ctx, userId),
 });
 
 export const createUserAnonymous = internalMutation({

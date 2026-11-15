@@ -18,7 +18,7 @@ Angular bindings for [Convex](https://convex.dev). This repository contains:
 
 | Page | Convex features |
 |---|---|
-| **Login / Account** | Convex Auth 2.0 with username + password, email + password (verification link, password recovery, email change), passkeys (autofill, add/remove), GitHub OAuth, an OpenID Connect provider served by the backend itself (consent page, PKCE, signed `id_token`), and anonymous accounts. The last two are custom methods built on Convex Auth's `bindMethod`. Route guard, sign-out. |
+| **Login / Account** | Convex Auth 2.0 with username + password, email + password (verification link, password recovery, email change), passkeys (autofill, add/remove), GitHub and Google OAuth, Sign in with Apple (ready, enabled by four variables), an OpenID Connect provider served by the backend itself (consent page, PKCE, signed `id_token`), and anonymous accounts. The last two are custom methods built on Convex Auth's `bindMethod`. Route guard, sign-out. |
 | **Todos** | Optimistic mutations, filters on an index, per-project stats, full-text **search index**. |
 | **Chat** | Real time between users, presence (heartbeat plus a cleanup cron), image messages from **file storage**, paginated history, search. |
 | **Data** | 1,000-row seed written in batched mutations, `paginate()` with *load more*, filtering on an **index** (`by_kind`), counts. |
@@ -37,6 +37,7 @@ Every Convex 1.50 and Convex Auth 2.0 feature, with the demo file and the test t
 | ![data](docs/screenshots/data-index.png) | ![jobs](docs/screenshots/jobs.png) | ![mailbox](docs/screenshots/mailbox.png) |
 | ![passkey](docs/screenshots/passkey.png) | ![login](docs/screenshots/login.png) | ![system](docs/screenshots/system.png) |
 | ![lab](docs/screenshots/lab.png) | ![oidc consent](docs/screenshots/oidc-consent.png) | ![oidc signed in](docs/screenshots/oidc-signed-in.png) |
+| ![oauth providers](docs/screenshots/oauth-providers.png) | | |
 
 ## Run it
 
@@ -55,6 +56,10 @@ The backend reads these environment variables (`npx convex env set NAME value`):
 |---|---|
 | `SITE_URL` | Public origin of the app, used in emailed links and the OAuth redirect. Defaults to `http://localhost:4200`. |
 | `AUTH_GITHUB_CLIENT_ID` / `AUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth app. Its callback URL is `https://<deployment>.convex.site/oauth/github/callback` (`http://127.0.0.1:3211/oauth/github/callback` for the local backend). |
+| `AUTH_GOOGLE_CLIENT_ID` / `AUTH_GOOGLE_CLIENT_SECRET` | Google Cloud OAuth client (type *Web application*). Authorized redirect URI: `https://<deployment>.convex.site/oauth/google/callback` (`http://127.0.0.1:3211/oauth/google/callback` locally). While the consent screen is in *Testing*, only its test users can sign in. |
+| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_TEAM_ID` / `AUTH_APPLE_KEY_ID` / `AUTH_APPLE_PRIVATE_KEY` | Sign in with Apple: Services ID, team id, key id and the `.p8` key. Return URL: `https://<deployment>.convex.site/oauth/apple/callback` (Apple refuses localhost). |
+
+Every one of these variables must exist, because the auth components declare them. Set any provider you don't use to `not-configured`: its button is then disabled (the `oauthProviders` query reports it).
 
 ### Against a cloud deployment
 
@@ -77,7 +82,7 @@ npx playwright test                                # demo e2e against the local 
 E2E_CONFIG=cloud npx playwright test               # the same suite against the cloud deployment
 ```
 
-The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches to Playwright's own build). It saves a full-page screenshot of every step in `e2e/screenshots/`. Passkeys are tested with a virtual WebAuthn authenticator. The OAuth protocol is tested end to end against the demo OIDC provider; GitHub is tested up to the redirect to github.com.
+The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches to Playwright's own build). It saves a full-page screenshot of every step in `e2e/screenshots/`. Passkeys are tested with a virtual WebAuthn authenticator. The OAuth protocol is tested end to end against the demo OIDC provider; GitHub and Google are tested up to the redirect to the provider (their full flows were run by hand); Apple is tested in both states, disabled and redirecting.
 
 `scripts/dashboard-cli.sh` runs the dashboard's features (data browser, function runner, inline query, import, export, environment variables, logs, insights) through `npx convex` against the selected deployment.
 
@@ -103,7 +108,7 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 - **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
 
-No secret is needed. GitHub OAuth is only tested up to the redirect, so a placeholder client id is enough.
+No secret is needed. GitHub and Google are only tested up to the redirect, so placeholder client ids are enough; Apple stays `not-configured` unless the `AUTH_APPLE_*` variables are present.
 
 ## License
 
