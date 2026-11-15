@@ -1,6 +1,22 @@
 {
   "name": "angular-convex",
   "version": "0.0.1",
+  "description": "Angular bindings for Convex: signal-based live queries, mutations, actions, pagination, file storage and the Convex Auth 2.0 client.",
+  "keywords": [
+    "angular",
+    "convex",
+    "signals",
+    "realtime",
+    "convex-auth"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tibdev78/angular-convex.git",
+    "directory": "projects/angular-convex"
+  },
+  "homepage": "https://github.com/tibdev78/angular-convex#readme",
+  "bugs": "https://github.com/tibdev78/angular-convex/issues",
   "peerDependencies": {
     "@angular/common": "^17.3.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0",
     "@angular/core": "^17.3.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0",

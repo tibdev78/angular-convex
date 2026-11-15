@@ -1,59 +1,92 @@
-# AngularConvex
+# angular-convex
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.7.
+Angular bindings for [Convex](https://convex.dev). This repository contains:
 
-## Development server
+| Path | What |
+|---|---|
+| [`projects/angular-convex`](projects/angular-convex) | The library, published as `angular-convex`. It has three entry points: `angular-convex`, `angular-convex/convex-auth` and `angular-convex/testing`. **API documentation: [library README](projects/angular-convex/README.md).** |
+| [`projects/convex-agl`](projects/convex-agl) | **convex-agl**, a demo app that exercises every feature against a real backend. |
+| [`projects/convex-agl/convex`](projects/convex-agl/convex) | The demo's Convex backend: schema, functions, auth, crons, HTTP routes. |
+| [`e2e`](e2e) | Playwright end-to-end suite for the demo, run against local or cloud. |
+| [`compat`](compat) | Compatibility matrix covering Angular 17 → 22 on Node 20 / 22 / 24. |
 
-To start a local development server, run:
+![Real-time chat between two users](docs/screenshots/chat-image.png)
 
-```bash
-ng serve
-```
+## The demo — what it covers
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| Page | Convex features |
+|---|---|
+| **Login / Account** | Convex Auth 2.0 with username + password, email + password (verification link, password recovery, email change), passkeys (autofill, add/remove) and GitHub OAuth. Route guard, sign-out. |
+| **Todos** | Optimistic mutations, filters on an index, per-project stats, full-text **search index**. |
+| **Chat** | Real time between users, presence (heartbeat plus a cleanup cron), image messages from **file storage**, paginated history, search. |
+| **Data** | 1,000-row seed written in batched mutations, `paginate()` with *load more*, filtering on an **index** (`by_kind`), counts. |
+| **Files** | Upload with progress, gallery served from storage URLs, server-side validation, delete. |
+| **Notes** | **Vector search** from an action (`ctx.vectorSearch`) with deterministic embeddings. |
+| **Jobs** | `ctx.scheduler.runAfter` / `cancel`, job status, a **cron** counter updated live. |
+| **Mail** | A local fake Resend component: emails are sent by scheduled mutations and land in an in-app mailbox. No real email leaves the app. |
+| **System** | Connection state, typed `ConvexError`s, action → **HTTP route**, one-shot `ConvexHttpClient`. |
 
-## Code scaffolding
+| | | |
+|---|---|---|
+| ![todos](docs/screenshots/todos.png) | ![files](docs/screenshots/files.png) | ![vector search](docs/screenshots/vector-search.png) |
+| ![data](docs/screenshots/data-index.png) | ![jobs](docs/screenshots/jobs.png) | ![mailbox](docs/screenshots/mailbox.png) |
+| ![passkey](docs/screenshots/passkey.png) | ![login](docs/screenshots/login.png) | ![system](docs/screenshots/system.png) |
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Run it
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Requires Node 22 or 24, which is what the workspace uses (Angular 22).
 
 ```bash
-ng test
+npm install
+npm run build:lib                                 # the demo imports the built library
+CONVEX_AGENT_MODE=anonymous npx convex dev        # local backend on 127.0.0.1:3210, pushes on save
+npx ng serve convex-agl                           # http://localhost:4200
 ```
 
-## Running end-to-end tests
+The backend reads these environment variables (`npx convex env set NAME value`):
 
-For end-to-end (e2e) testing, run:
+| Variable | Purpose |
+|---|---|
+| `SITE_URL` | Public origin of the app, used in emailed links and the OAuth redirect. Defaults to `http://localhost:4200`. |
+| `AUTH_GITHUB_CLIENT_ID` / `AUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth app. Its callback URL is `https://<deployment>.convex.site/oauth/github/callback` (`http://127.0.0.1:3211/oauth/github/callback` for the local backend). |
+
+### Against a cloud deployment
 
 ```bash
-ng e2e
+npx convex dev --once                              # push to the deployment selected by CONVEX_DEPLOYMENT
+npx ng serve convex-agl -c cloud                   # uses src/environments/environment.cloud.ts
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Point `environment.cloud.ts` at your own deployment.
 
-## Additional Resources
+| | | |
+|---|---|---|
+| ![functions](docs/screenshots/dashboard-functions.jpg) | ![tables](docs/screenshots/dashboard-tables.jpg) | ![crons](docs/screenshots/dashboard-crons.jpg) |
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Tests
+
+```bash
+npx ng test angular-convex --watch=false           # library unit tests (Vitest)
+npx playwright test                                # demo e2e against the local backend
+E2E_CONFIG=cloud npx playwright test               # the same suite against the cloud deployment
+```
+
+The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches to Playwright's own build). It saves a full-page screenshot of every step in `e2e/screenshots/`. Passkeys are tested with a virtual WebAuthn authenticator. GitHub OAuth is tested up to the redirect to github.com.
+
+### Compatibility matrix
+
+```bash
+npm run build:lib && (cd dist/angular-convex && npm pack --pack-destination ../../compat)
+compat/run.sh                                      # one `ng new` app per row, built from the tarball
+npx playwright test -c compat/playwright.config.ts # runs each build against the backend
+```
+
+The script needs [fnm](https://github.com/Schniz/fnm) and the Node versions it lists. The rows are `angular:node:convex`, for example `compat/run.sh 19:20:1.48.0`. Results go to [`compat/RESULTS.md`](compat/RESULTS.md). Run it again for every new Angular major.
+
+| Angular 17 on Node 20 | Angular 22 on Node 24 |
+|---|---|
+| ![ng17](docs/screenshots/compat-ng17.png) | ![ng22](docs/screenshots/compat-ng22.png) |
+
+## License
+
+MIT
