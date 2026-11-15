@@ -143,13 +143,14 @@ test.describe('Convex Auth', () => {
   test('Google OAuth: OpenID Connect redirect with PKCE to accounts.google.com', async ({ page }, info) => {
     await page.goto('/login');
     await page.getByTestId('tab-oauth').click();
+    // Read the authorize request itself: with a placeholder client id (CI),
+    // Google answers it with an error page whose URL no longer carries it.
+    const authorize = page.waitForRequest(
+      (r) => r.url().startsWith('https://accounts.google.com/') && new URL(r.url()).searchParams.has('client_id'),
+    );
     await page.getByTestId('google-signin').click();
+    const params = new URL((await authorize).url()).searchParams;
     await page.waitForURL(/accounts\.google\.com/);
-    const url = new URL(page.url());
-    // Google may wrap the authorize request in its sign-in pages; the query
-    // carries it either way.
-    const query = url.searchParams.get('continue') ? new URL(url.searchParams.get('continue')!).searchParams : url.searchParams;
-    const params = query.get('redirect_uri') ? query : url.searchParams;
     expect(params.get('redirect_uri')).toMatch(/\/oauth\/google\/callback$/);
     expect(params.get('code_challenge_method')).toBe('S256');
     expect(params.get('scope')).toContain('openid');
