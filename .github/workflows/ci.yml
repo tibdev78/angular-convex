@@ -40,6 +40,8 @@ jobs:
       - run: scripts/ci-backend.sh
       - run: npm run build:lib
       - run: npx playwright test
+      - name: Dashboard features from the CLI
+        run: scripts/dashboard-cli.sh | tee dashboard-cli.txt
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -48,6 +50,7 @@ jobs:
             e2e/screenshots
             e2e/report
             convex-dev.log
+            dashboard-cli.txt
 
   compat:
     name: Angular ${{ matrix.angular }} · Node ${{ matrix.node }}

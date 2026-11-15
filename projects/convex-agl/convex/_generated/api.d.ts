@@ -13,6 +13,7 @@ import type * as crons from "../crons.js";
 import type * as events from "../events.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as idp from "../idp.js";
 import type * as jobs from "../jobs.js";
 import type * as lab from "../lab.js";
 import type * as lib from "../lib.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   files: typeof files;
   http: typeof http;
+  idp: typeof idp;
   jobs: typeof jobs;
   lab: typeof lab;
   lib: typeof lib;
@@ -86,4 +88,5 @@ export declare const components: {
   authPasskey: import("@convex-dev/auth/components/passkey/_generated/component.js").ComponentApi<"authPasskey">;
   authGithub: import("@convex-dev/auth/components/github/_generated/component.js").ComponentApi<"authGithub">;
   resend: import("../resend/_generated/component.js").ComponentApi<"resend">;
+  demoAuth: import("../demoAuth/_generated/component.js").ComponentApi<"demoAuth">;
 };

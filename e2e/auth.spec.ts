@@ -129,7 +129,7 @@ test.describe('Convex Auth', () => {
 
   test('GitHub OAuth: starts the flow and redirects to github.com', async ({ page }, info) => {
     await page.goto('/login');
-    await page.getByTestId('tab-github').click();
+    await page.getByTestId('tab-oauth').click();
     await shot(page, info, 'github-tab');
     await page.getByTestId('gh-signin').click();
     await page.waitForURL(/github\.com\/login/);
@@ -142,8 +142,71 @@ test.describe('Convex Auth', () => {
 
   test('GitHub OAuth: an error returned by the callback is shown', async ({ page }, info) => {
     await page.goto('/login?convexAuthError=access_denied');
-    await page.getByTestId('tab-github').click();
+    await page.getByTestId('tab-oauth').click();
     await expect(page.getByTestId('oauth-error')).toContainText('access denied');
     await shot(page, info, 'oauth-error');
+  });
+
+  test('demo OIDC provider: consent, code exchange, signed id_token, same account on return', async ({ page }, info) => {
+    const email = `${unique('ada')}@example.test`.toLowerCase();
+    await page.goto('/login?next=%2Faccount');
+    await page.getByTestId('tab-oauth').click();
+    await page.getByTestId('idp-signin').click();
+    // The provider's consent page, served by the backend's /idp/authorize.
+    await page.waitForURL(/\/idp\/authorize\?/);
+    const authorize = new URL(page.url());
+    expect(authorize.searchParams.get('code_challenge_method')).toBe('S256');
+    expect(authorize.searchParams.get('redirect_uri')).toMatch(/\/oauth\/demo\/callback$/);
+    await page.getByTestId('idp-name').fill('Ada Lovelace');
+    await page.getByTestId('idp-email').fill(email);
+    await shot(page, info, 'idp-consent');
+    await page.getByTestId('idp-allow').click();
+
+    // Callback → /login?convexAuthCode=… → redeemed → `next`.
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByTestId('account-method')).toHaveText('demoIdp');
+    await expect(page.getByTestId('account-name')).toHaveText('Ada Lovelace');
+    await expect(page.getByTestId('account-email')).toHaveText(email);
+    const userId = await page.getByTestId('account-id').textContent();
+    await shot(page, info, 'idp-signed-in');
+
+    // Signing in again with the same email finds the same account (renamed by onSignIn).
+    await page.getByTestId('sign-out').click();
+    await expect(page).toHaveURL(/\/login/);
+    await page.goto('/login?next=%2Faccount');
+    await page.getByTestId('tab-oauth').click();
+    await page.getByTestId('idp-signin').click();
+    await page.waitForURL(/\/idp\/authorize\?/);
+    await page.getByTestId('idp-name').fill('Ada King');
+    await page.getByTestId('idp-email').fill(email);
+    await page.getByTestId('idp-allow').click();
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByTestId('account-name')).toHaveText('Ada King');
+    await expect(page.getByTestId('account-id')).toHaveText(userId!);
+    await expect(page.getByTestId('account-email')).toHaveText(email);
+    await shot(page, info, 'idp-signed-in-again');
+  });
+
+  test('demo OIDC provider: denying consent comes back as access denied', async ({ page }, info) => {
+    await page.goto('/login');
+    await page.getByTestId('tab-oauth').click();
+    await page.getByTestId('idp-signin').click();
+    await page.waitForURL(/\/idp\/authorize\?/);
+    await page.getByTestId('idp-deny').click();
+    await expect(page).toHaveURL(/\/login/);
+    await page.getByTestId('tab-oauth').click();
+    await expect(page.getByTestId('oauth-error')).toContainText('access denied');
+    await expect(page.getByTestId('login-link')).toBeVisible();
+    await shot(page, info, 'idp-denied');
+  });
+
+  test('anonymous: a new account per sign-in', async ({ page }, info) => {
+    await page.goto('/login?next=%2Faccount');
+    await page.getByTestId('tab-anonymous').click();
+    await shot(page, info, 'anonymous-tab');
+    await page.getByTestId('anon-signin').click();
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByTestId('account-method')).toHaveText('anonymous');
+    await shot(page, info, 'anonymous-account');
   });
 });

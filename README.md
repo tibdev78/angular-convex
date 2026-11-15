@@ -18,7 +18,7 @@ Angular bindings for [Convex](https://convex.dev). This repository contains:
 
 | Page | Convex features |
 |---|---|
-| **Login / Account** | Convex Auth 2.0 with username + password, email + password (verification link, password recovery, email change), passkeys (autofill, add/remove) and GitHub OAuth. Route guard, sign-out. |
+| **Login / Account** | Convex Auth 2.0 with username + password, email + password (verification link, password recovery, email change), passkeys (autofill, add/remove), GitHub OAuth, an OpenID Connect provider served by the backend itself (consent page, PKCE, signed `id_token`), and anonymous accounts. The last two are custom methods built on Convex Auth's `bindMethod`. Route guard, sign-out. |
 | **Todos** | Optimistic mutations, filters on an index, per-project stats, full-text **search index**. |
 | **Chat** | Real time between users, presence (heartbeat plus a cleanup cron), image messages from **file storage**, paginated history, search. |
 | **Data** | 1,000-row seed written in batched mutations, `paginate()` with *load more*, filtering on an **index** (`by_kind`), counts. |
@@ -27,7 +27,7 @@ Angular bindings for [Convex](https://convex.dev). This repository contains:
 | **Jobs** | `ctx.scheduler.runAfter` / `cancel`, job status, a **cron** counter updated live. |
 | **Mail** | A local fake Resend component: emails are sent by scheduled mutations and land in an in-app mailbox. No real email leaves the app. |
 | **System** | Connection state, typed `ConvexError`s, action → **HTTP route**, one-shot `ConvexHttpClient`. |
-| **Lab** | Every value type (`v.int64`, `v.bytes`, `v.record`, `v.any`, `v.nullable`, `v.commitTs`, `v.function`), `db.replace`, `normalizeId`, function handles with `runAfter` / `runAt`, `for await` and `q.and` filters, nested `runQuery` with `transactionLimits`, the **Node runtime**, `storage.store` from an action, a CORS **HTTP route** with a bearer token, an authenticated `ConvexHttpClient`, `throwOnError`, every cron kind. |
+| **Lab** | Every value type (`v.int64`, `v.bytes`, `v.record`, `v.any`, `v.nullable`, `v.commitTs`, `v.function`), `db.replace`, `normalizeId`, function handles with `runAfter` / `runAt`, `for await` and `q.and` filters, nested `runQuery` with `transactionLimits`, the **Node runtime**, `storage.store` from an action, a CORS **HTTP route** with a bearer token, an authenticated `ConvexHttpClient`, `throwOnError`, every cron kind, `ctx.db.table()`, `log.audit`, `getServiceUrl` / `getServiceToken`, `storage.getMetadata`. |
 
 Every Convex 1.50 and Convex Auth 2.0 feature, with the demo file and the test that covers it, is listed in **[COVERAGE.md](COVERAGE.md)**.
 
@@ -36,7 +36,7 @@ Every Convex 1.50 and Convex Auth 2.0 feature, with the demo file and the test t
 | ![todos](docs/screenshots/todos.png) | ![files](docs/screenshots/files.png) | ![vector search](docs/screenshots/vector-search.png) |
 | ![data](docs/screenshots/data-index.png) | ![jobs](docs/screenshots/jobs.png) | ![mailbox](docs/screenshots/mailbox.png) |
 | ![passkey](docs/screenshots/passkey.png) | ![login](docs/screenshots/login.png) | ![system](docs/screenshots/system.png) |
-| ![lab](docs/screenshots/lab.png) | | |
+| ![lab](docs/screenshots/lab.png) | ![oidc consent](docs/screenshots/oidc-consent.png) | ![oidc signed in](docs/screenshots/oidc-signed-in.png) |
 
 ## Run it
 
@@ -77,7 +77,9 @@ npx playwright test                                # demo e2e against the local 
 E2E_CONFIG=cloud npx playwright test               # the same suite against the cloud deployment
 ```
 
-The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches to Playwright's own build). It saves a full-page screenshot of every step in `e2e/screenshots/`. Passkeys are tested with a virtual WebAuthn authenticator. GitHub OAuth is tested up to the redirect to github.com.
+The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches to Playwright's own build). It saves a full-page screenshot of every step in `e2e/screenshots/`. Passkeys are tested with a virtual WebAuthn authenticator. The OAuth protocol is tested end to end against the demo OIDC provider; GitHub is tested up to the redirect to github.com.
+
+`scripts/dashboard-cli.sh` runs the dashboard's features (data browser, function runner, inline query, import, export, environment variables, logs, insights) through `npx convex` against the selected deployment.
 
 ### Compatibility matrix
 
@@ -98,7 +100,7 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs three jobs on every push and pull request:
 
 - **library**: builds the library, runs the unit tests and packs the tarball;
-- **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)) and runs the whole Playwright suite;
+- **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
 
 No secret is needed. GitHub OAuth is only tested up to the redirect, so a placeholder client id is enough.

@@ -55,6 +55,7 @@ A `ConvexQuery<T>` is a `Signal<T | undefined>` with `data`, `error`, `status` (
 | Many dynamic queries (`useQueries`) | `injectQueries(() => ({ a: { query, args }, … }))` |
 | Pagination (`usePaginatedQuery`) | `injectPaginatedQuery(api.events.list, () => ({ kind }), { initialNumItems: 25 })` exposes `results`, `status`, `canLoadMore` and `loadMore(n)` |
 | Warm the cache before navigating | `prewarmQuery(ref, args)` in an injection context, or `const prewarm = injectPrewarmQuery(); prewarm(ref, args)` |
+| A query and its args as one shareable value | `const todos = convexQueryOptions({ query: api.todos.list, args: {} })`, then `injectQueryFromOptions(todos)` or `prewarmQueryFromOptions(todos)` |
 | RxJS | `fromConvexQuery(injectConvex(), ref, args)` returns an `Observable` |
 | One-shot HTTP call | `injectConvexHttpClient()` (anonymous, shared) |
 | One-shot HTTP call as the signed-in user, `consistentQuery` | `const client = await injectAuthenticatedHttpClient()()` |
@@ -104,7 +105,8 @@ async onFile(file: File) {
 | Email + password | `injectSignUpWithEmailPassword`, `injectSignInWithEmailPassword`, `injectStartPasswordRecovery`, `injectStartChangeEmail` |
 | Email links (routes) | `injectCompleteSignUpWithEmailPassword`, `injectCompletePasswordRecovery`, `injectCompleteChangeEmail` (take `{ emailCode: () => code }`) |
 | Passkeys | `injectSignInWithUsernamePasskey` (with autofill), `injectAddPasskey`, `injectRemovePasskey`, `supportsWebAuthn()` |
-| OAuth | `injectSignInWithGithub`, `injectSignInWithGoogle`, `injectSignInWithApple`, `injectOauthSignIn(refs)`, `injectOauth().flowError` |
+| OAuth | `injectSignInWithGithub`, `injectSignInWithGoogle`, `injectSignInWithApple`, `injectOauthSignIn(refs)` for any provider exporting the two OAuth mutations, `injectOauth().flowError` |
+| Anonymous | `injectSignInAnonymously(api.auth)` (`signIn`, `pending`) |
 | Session | `injectAuthActions()` (`signOut`, `setSession`), `injectAuthState()`, `injectAuthToken()` |
 
 ```ts
@@ -113,7 +115,7 @@ const result = await this.signIn.signIn({ username, password });
 // signIn.pending() and signIn.userError() are signals; expected failures are returned as `userError` and never thrown
 ```
 
-Each method needs its server side in `convex/auth.ts`, as described in the Convex Auth docs. The demo's [`convex/auth.ts`](../convex-agl/convex/auth.ts) wires all four methods.
+Each method needs its server side in `convex/auth.ts`, as described in the Convex Auth docs. The demo's [`convex/auth.ts`](../convex-agl/convex/auth.ts) wires all six methods, including two custom ones (anonymous, and an OpenID Connect provider) built with Convex Auth's `bindMethod`.
 
 ## Testing — `angular-convex/testing`
 
@@ -141,6 +143,8 @@ TestBed.configureTestingModule({ providers: [provideConvexTesting(convex)] });
 | `<Authenticated>` `<Unauthenticated>` `<AuthLoading>` | `*convexAuthenticated` `*convexUnauthenticated` `*convexAuthLoading` |
 | `insertAtTop` / `insertAtBottomIfLoaded` / `insertAtPosition` / `optimisticallyUpdateValueInPaginatedQuery` | same names |
 | `prewarmQuery` | `prewarmQuery`, `injectPrewarmQuery` |
+| `convexQueryOptions` | `convexQueryOptions`, `injectQueryFromOptions`, `prewarmQueryFromOptions` |
+| `resetPaginationId` | not needed (no module-level pagination counter) |
 | `preloadQuery` + `usePreloadedQuery` | SSR prefetch via `TransferState` (automatic) |
 | `ConvexAuthProvider`, `useAuthActions`, `useAuthToken` | `provideConvexAuthClient`, `injectAuthActions`, `injectAuthToken` |
 | `ConvexHttpClient` + `setAuth` | `injectAuthenticatedHttpClient` |

@@ -106,4 +106,33 @@ test.describe('Lab: remaining server primitives', () => {
     await expect(page.getByTestId('lab-thrown')).toContainText('caught LAB_THROWN');
     await shot(page, info, 'http-and-errors');
   });
+
+  test('db.table, log.audit, service URL and token, storage.getMetadata', async ({ page }, info) => {
+    await page.getByTestId('lab-via-table').click();
+    const table = page.getByTestId('lab-via-table-result');
+    await expect(table).toContainText('"patched": 7');
+    await expect(table).toContainText('"readBack": "via db.table"');
+    await expect(table).toContainText('"queried": 1');
+    await expect(table).toContainText('"deleted": true');
+
+    // log.audit from a mutation, with every log.vars field.
+    await page.getByTestId('lab-audit').click();
+    await expect(page.getByTestId('lab-audit-result')).toContainText('"ok": true');
+    await expect(page.getByTestId('lab-audit-result')).toContainText('"value": "recorded"');
+    await page.getByTestId('lab-platform').click();
+    const platform = page.getByTestId('lab-platform-result');
+    await expect(platform).toContainText('"metadata"');
+    // storage.getMetadata (deprecated, still served) on a blob the action stored.
+    await expect(platform).toContainText('size 14 · text/plain · sha256');
+    await expect(platform).toContainText('"value": "https://ai-gateway.convex.dev"');
+    // getServiceToken depends on the deployment: an anonymous local backend (CI)
+    // asks for `npx convex login`; a cloud team on the free plan is told the AI
+    // gateway needs a paid plan; a paid team gets a token (only its length is shown).
+    await expect(platform).toContainText(
+      /token of \d+ chars|requires an authenticated local deployment|AI gateway is not enabled for your team/,
+    );
+    // Audit logging is refused in actions by every deployment.
+    await expect(platform).toContainText('Audit logging is not yet supported in actions');
+    await shot(page, info, 'platform-probes');
+  });
 });

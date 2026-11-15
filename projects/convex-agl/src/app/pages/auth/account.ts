@@ -31,6 +31,7 @@ import { userErrorText } from '../../shared/user-error';
               <span class="badge" data-testid="account-method">{{ user.method }}</span>
               @if (user.username) { · &#64;{{ user.username }} }
               @if (user.email) { · <span data-testid="account-email">{{ user.email }}</span> }
+              · <code data-testid="account-id">{{ user._id }}</code>
             </div>
           </div>
           <button type="button" class="ghost" (click)="signOut()" data-testid="sign-out">Sign out</button>

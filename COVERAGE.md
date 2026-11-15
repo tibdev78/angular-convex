@@ -22,6 +22,8 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | `useAction` | `injectAction` | `notes.ts`, `system.ts`, `lab.ts` | `inject-mutation.spec`, `features.spec`, `lab.spec` |
 | `insertAtTop`, `insertAtBottomIfLoaded`, `insertAtPosition`, `optimisticallyUpdateValueInPaginatedQuery` | same names | `chat.ts` | `paginated.spec` |
 | `prewarmQuery` | `prewarmQuery`, `injectPrewarmQuery` | `app.ts` (nav links) | `inject-query.spec` |
+| `convexQueryOptions` (a query reference and its args as one value) | `convexQueryOptions`, `injectQueryFromOptions`, `prewarmQueryFromOptions` | `app/shared/queries.ts`, `lab.ts`, `app.ts` (prewarm) | `query-options.spec`, `lab.spec` |
+| `resetPaginationId` | not needed: see below | — | — |
 | `useConvexConnectionState`, `ConvexClient.subscribeToConnectionState` | `injectConvexConnectionState` | `system.ts` | `inject-connection-state.spec`, `features.spec` (system) |
 | `ConvexProviderWithAuth`, `useConvexAuth`, `ConvexClient.setAuth` | `provideConvexAuth`, `injectConvexAuth` | `app.config.ts` (through Convex Auth) | `convex-auth.spec`, `auth.spec` |
 | `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>`, `<AuthRefreshing>` | `*convexAuthenticated`, `*convexUnauthenticated`, `*convexAuthLoading`, `*convexAuthRefreshing` | `app.ts` | `convex-auth.spec` |
@@ -56,7 +58,9 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | Typed `env` from `_generated/server` | `convex/auth.ts` (`SITE_URL`) | `auth.spec` (emailed links) |
 | `createFunctionHandle`, scheduling a handle | `lab.ts` (`bumpLater`) | `lab.spec` |
 | `httpRouter`, `httpAction`, `pathPrefix`, CORS preflight, bearer auth | `convex/http.ts` | `lab.spec`, `features.spec` (system) |
-| `defineApp`, `defineComponent`, calling a component | `convex/convex.config.ts`, `convex/resend/` | `features.spec` (mail) |
+| `defineApp`, `defineComponent`, calling a component | `convex/convex.config.ts`, `convex/resend/`, `convex/demoAuth/` | `features.spec` (mail), `auth.spec` (anonymous, demo OIDC) |
+| `log.audit` with `log.vars` (`requestId`, `convexActor`, `ip`, `userAgent`, `now`) | `lab.ts` (`audit` mutation; `platform` action) | `lab.spec`: recorded from a mutation; refused from an action with "Audit logging is not yet supported in actions" |
+| `getServiceUrl`, `getServiceToken` (Convex-managed services) | `lab.ts` (`platform`) | `lab.spec`: the AI gateway URL everywhere. The token depends on the deployment: an anonymous local backend asks for `npx convex login`, a free-plan cloud team gets "The Convex AI gateway is not enabled for your team", a paid team gets the token |
 | `schema.doc(table)`, `paginationOptsValidator`, `paginationResultValidator` | `lab.ts` | `lab.spec` |
 
 ## Server — database
@@ -64,6 +68,7 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | Convex | Demo | Test |
 |---|---|---|
 | `db.insert`, `db.patch`, `db.replace`, `db.delete`, `db.get` (with and without a table name) | `todos.ts`, `lab.ts` | `features.spec`, `lab.spec` |
+| `db.table(name)` (`insert`, `patch`, `get`, `query`, `delete` scoped to one table) | `lab.ts` (`viaTable`) | `lab.spec` |
 | `db.normalizeId` | `lab.ts` | `lab.spec` |
 | `withIndex` with `eq`, `gte`, `lt` ranges; `order`; `first`, `unique`, `take`, `collect`, `paginate` | `events.ts`, `lab.ts`, `todos.ts` | `features.spec` (data), `lab.spec` |
 | Async iteration (`for await` over a query) | `lab.ts` (`overview`) | `lab.spec` |
@@ -79,6 +84,7 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 |---|---|---|
 | `storage.generateUploadUrl`, `getUrl`, `delete` | `files.ts`, `messages.ts` | `features.spec` (files, chat) |
 | `storage.store`, `storage.get` (from an action and an HTTP action) | `lab.ts` (`digest`), `http.ts` | `lab.spec` |
+| `storage.getMetadata` (deprecated, still served) | `lab.ts` (`platform`) | `lab.spec` |
 | `scheduler.runAfter`, `scheduler.runAt`, `scheduler.cancel` | `jobs.ts`, `mail.ts`, `lab.ts` | `features.spec` (jobs, mail), `lab.spec` |
 | `crons.interval`, `crons.cron`, `hourly`, `daily`, `weekly`, `monthly` | `convex/crons.ts` | `features.spec` (jobs counter), `lab.spec` (stats) |
 
@@ -91,17 +97,31 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | Username + password (sign up, sign in, change password) | `injectSignUpWithUsernamePassword`, `injectSignInWithUsernamePassword` | `login.ts`, `account.ts` | `password.spec`, `auth.spec` |
 | Email + password (verification link, recovery, change email) | `injectSignUpWithEmailPassword`, `injectSignInWithEmailPassword`, `injectStartPasswordRecovery`, `injectStartChangeEmail`, `injectComplete…` | `login.ts`, email link pages | `password.spec`, `auth.spec` |
 | Passkeys (autofill, add, remove) | `injectSignInWithUsernamePasskey`, `injectAddPasskey`, `injectRemovePasskey`, `supportsWebAuthn` | `login.ts`, `account.ts` | `passkey.spec`, `auth.spec` (virtual authenticator) |
-| OAuth (GitHub, Google, Apple, generic) | `injectSignInWithGithub`, `injectSignInWithGoogle`, `injectSignInWithApple`, `injectOauthSignIn`, `injectOauth` | `login.ts` (GitHub) | `oauth.spec`, `auth.spec` (up to github.com; the full flow was tested by hand) |
+| OAuth (GitHub, Google, Apple, generic) | `injectSignInWithGithub`, `injectSignInWithGoogle`, `injectSignInWithApple`, `injectOauthSignIn`, `injectOauth` | `login.ts` (GitHub; demo OIDC through `injectOauthSignIn`) | `oauth.spec`; `auth.spec`: GitHub up to github.com (the full GitHub flow was run by hand), the **whole** flow against the demo OIDC provider (consent, PKCE, `id_token`, return to the same account, denial → `ACCESS_DENIED`) |
+| Custom methods (`bindMethod`, `ctx.convexAuth.completeSignUp` / `completeSignIn`) | — (server side) | `convex/auth.ts` (`anonymous`, `demoIdp`), `convex/idp.ts`, `convex/demoAuth/` | `auth.spec` |
+| Anonymous sign-in (`signInAnonymously`) | `injectSignInAnonymously` | `login.ts` | `anonymous.spec`, `auth.spec` |
 | `TokenStorage`, `InMemoryStorage` | re-exported | — | `provide-convex-auth-client.spec` |
 
-## Not covered, on purpose
+## Dashboard features — from the CLI
 
-| Convex | Why |
+[`scripts/dashboard-cli.sh`](scripts/dashboard-cli.sh) drives what the dashboard does through `npx convex`, against any deployment. CI runs it after the e2e suite and keeps its output with the evidence.
+
+| Dashboard | CLI | Note |
+|---|---|---|
+| Data browser (tables, rows, component tables) | `convex data`, `convex data <table>`, `--component` | |
+| Function runner, ad-hoc query | `convex run`, `convex run --inline-query` | |
+| Function list | `convex function-spec` | |
+| Import, export / snapshots | `convex import --append`, `convex export --path` | Adds two `events` rows; the export goes to a temporary directory. |
+| Environment variables | `convex env list` | Names only. |
+| Logs | `convex logs --history` | |
+| Health insights | `convex insights` | Cloud deployments only. |
+
+Screenshots of the cloud dashboard (functions, tables, crons) are in [`docs/screenshots/`](docs/screenshots).
+
+## Notes
+
+| Convex | Why there is no Angular counterpart |
 |---|---|
-| `resetPaginationId` | Only resets an internal counter for React tests; `FakeConvexClient` does not need it. |
-| `convexQueryOptions` (TanStack Query) | Framework-neutral already; import it from `convex` if you use TanStack Query for Angular. |
-| `db.table()` | Declared in the 1.50 types, but missing from the runtime (`database_impl`). The demo uses `db.get/patch/replace/delete(table, id)` instead. |
-| `log.audit` | Convex Enterprise only. |
-| `getServiceToken`, `getServiceUrl` | For Convex-managed services (AI gateway); not available on a self-serve deployment. |
-| `storage.getMetadata` | Deprecated; the demo reads `_storage` with `db.system.get`. |
-| Dashboard-only features (logs, data editor, deploy keys) | No client API. The dashboard screenshots are in [`docs/screenshots/`](docs/screenshots). |
+| `resetPaginationId` | It resets a module-level counter used by React's `usePaginatedQuery` so test runs get stable ids. `angular-convex` keeps no such counter: paginated subscriptions belong to the `ConvexClient`. Tests isolate by creating a new `FakeConvexClient` (or calling `close()`), which drops every paginated listener. |
+| Convex Auth's `setupAnonymous` and generic OAuth server setup | Shipped in `@convex-dev/auth` 2.0 but not exported. The demo builds the same methods with `bindMethod` (see above). |
+| Google and Apple sign-in | The client functions are unit-tested (`oauth.spec`) and share the code path the demo OIDC flow proves end to end. Running them for real needs a Google Cloud OAuth client or a paid Apple Developer account: set `AUTH_GOOGLE_*` / `AUTH_APPLE_*` and mount `setupGoogle` / `setupApple` like `setupGithub`. |

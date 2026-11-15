@@ -74,6 +74,28 @@ export const onSignInGithub = internalMutation({
   },
 });
 
+export const createUserAnonymous = internalMutation({
+  args: { method: method("anonymous", noProfile) },
+  returns: v.id("users"),
+  handler: (ctx) => ctx.db.insert("users", { method: "anonymous" }),
+});
+
+const vDemoIdpProfile = v.object({ id: v.string(), name: v.string(), email: v.string(), emailVerified: v.boolean() });
+export const createUserDemoIdp = internalMutation({
+  args: { method: method("demoIdp", vDemoIdpProfile) },
+  returns: v.id("users"),
+  handler: (ctx, { method: { profile } }) =>
+    ctx.db.insert("users", { name: profile.name, method: "demoIdp", email: profile.emailVerified ? profile.email : undefined }),
+});
+export const onSignInDemoIdp = internalMutation({
+  args: { method: method("demoIdp", vDemoIdpProfile), userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { method: { profile }, userId }) => {
+    await ctx.db.patch(userId, { name: profile.name });
+    return touch(ctx, userId);
+  },
+});
+
 const vMe = v.object({
   _id: v.id("users"),
   name: v.string(),

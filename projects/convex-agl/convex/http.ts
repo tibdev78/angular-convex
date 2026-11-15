@@ -2,11 +2,16 @@ import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { registerDemoIdp } from "./idp";
 
 const http = httpRouter();
 
 // Convex Auth's GitHub component serves its own routes under /oauth/github
 // (declared with `httpPrefix` in convex.config.ts).
+
+// The demo OIDC provider (/idp/*, /.well-known/openid-configuration) and its
+// client callback (/oauth/demo/callback). See ./idp.ts.
+registerDemoIdp(http);
 
 http.route({
   path: "/api/health",

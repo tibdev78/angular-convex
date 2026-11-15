@@ -7,7 +7,9 @@ import {
   injectMutation,
   injectPaginatedQuery,
   injectQuery,
+  injectQueryFromOptions,
 } from 'angular-convex';
+import { labSamples } from '../shared/queries';
 import { api, type Id } from '../convex';
 import { errorText } from '../shared/errors';
 import { environment } from '../../environments/environment';
@@ -124,6 +126,23 @@ function parseCounts(text: string): Record<string, number> {
     </section>
 
     <section class="card">
+      <h2><code>ctx.db.table(name)</code>: insert, patch, get, query, delete on one table</h2>
+      <button type="button" (click)="viaTable({})" data-testid="lab-via-table">Run mutation</button>
+      <pre data-testid="lab-via-table-result">{{ viaTable.data() | json }}</pre>
+    </section>
+
+    <section class="card">
+      <h2>Plan-dependent APIs: <code>log.audit</code>, <code>getServiceUrl</code>, <code>getServiceToken</code>, <code>storage.getMetadata</code></h2>
+      <p class="muted">Each one is called for real; the page shows what this deployment answers.</p>
+      <div class="row">
+        <button type="button" (click)="audit({})" data-testid="lab-audit">log.audit from a mutation</button>
+        <button type="button" (click)="platform({})" [disabled]="platform.isPending()" data-testid="lab-platform">Probe from an action</button>
+      </div>
+      <pre data-testid="lab-audit-result">{{ audit.data() | json }}</pre>
+      <pre data-testid="lab-platform-result">{{ platform.data() | json }}</pre>
+    </section>
+
+    <section class="card">
       <h2>Crons: <code>cron</code> expression, <code>hourly</code>, <code>daily</code>, <code>weekly</code>, <code>monthly</code></h2>
       <ul data-testid="lab-crons">
         @for (c of cronStats() ?? []; track c.name) { <li>{{ c.name }}: {{ c.value }} run(s)</li> } @empty { <li class="muted">No run yet (the expression cron fires every 2 minutes).</li> }
@@ -146,7 +165,7 @@ export class LabPage {
   protected readonly httpReadBack = signal<string | null>(null);
   protected readonly oneShotResult = signal<unknown>(null);
 
-  protected readonly samples = injectQuery(api.lab.list);
+  protected readonly samples = injectQueryFromOptions(labSamples);
   protected readonly overview = injectQuery(api.lab.overview);
   protected readonly page = injectPaginatedQuery(api.lab.page, {}, { initialNumItems: 2 });
   protected readonly normalized = injectQuery(api.lab.normalize, () => (this.rawId() ? { id: this.rawId() } : 'skip'));
@@ -168,6 +187,9 @@ export class LabPage {
   protected readonly bumpLater = injectMutation(api.lab.bumpLater);
   protected readonly nested = injectMutation(api.lab.nested);
   protected readonly digest = injectAction(api.lab.digest);
+  protected readonly viaTable = injectMutation(api.lab.viaTable);
+  protected readonly audit = injectMutation(api.lab.audit);
+  protected readonly platform = injectAction(api.lab.platform);
   private readonly authenticatedHttp = injectAuthenticatedHttpClient();
   private readonly fetchToken = injectFetchAccessToken();
 

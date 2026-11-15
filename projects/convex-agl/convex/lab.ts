@@ -10,10 +10,10 @@
  * - actions: ctx.runAction into the Node runtime ("use node", ./node.ts), ctx.storage.store
  */
 import { ConvexError, getDocumentSize, v } from "convex/values";
-import { createFunctionHandle, type FunctionHandle, paginationOptsValidator, paginationResultValidator } from "convex/server";
+import { createFunctionHandle, type GenericDatabaseWriterWithTable, type FunctionHandle, getServiceToken, getServiceUrl, log, paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { DataModel, Id } from "./_generated/dataModel";
 import schema, { sampleFields } from "./schema";
 import { assertOwner, requireUserId } from "./lib";
 
@@ -252,5 +252,83 @@ export const scheduledBumps = query({
       .filter((job) => job.name.includes("bump"))
       .slice(0, 5)
       .map(({ _id, name, state, scheduledTime, completedTime }) => ({ _id, name, state: state.kind, scheduledTime, completedTime: completedTime ?? null }));
+  },
+});
+
+type Probe = { ok: true; value: string } | { ok: false; error: string };
+const probe = async (run: () => Promise<string>): Promise<Probe> => {
+  try {
+    return { ok: true, value: await run() };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message.split("\n")[0] : String(e) };
+  }
+};
+
+/**
+ * Platform APIs whose availability depends on the plan or the deployment:
+ * `log.audit` (Enterprise audit log), `getServiceUrl` / `getServiceToken`
+ * (Convex-managed services). Each is called for real and the outcome is
+ * returned as is, so the page shows what this deployment answers.
+ */
+export const platform = action({
+  args: {},
+  handler: async (ctx): Promise<{ audit: Probe; serviceUrl: Probe; serviceToken: Probe; metadata: Probe }> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError({ code: "NOT_AUTHENTICATED" });
+    const audit = await probe(async () => {
+      await log.audit({ action: "lab.platform", actor: log.vars.convexActor, ip: log.vars.ip, at: log.vars.now });
+      return "recorded";
+    });
+    const serviceUrl = await probe(() => getServiceUrl("ai-gateway"));
+    // The token itself is a credential: only its length leaves the action.
+    const serviceToken = await probe(async () => `token of ${(await getServiceToken("ai-gateway")).length} chars`);
+    const metadata = await probe(async () => {
+      const id = await ctx.storage.store(new Blob(["metadata probe"], { type: "text/plain" }));
+      // Deprecated in favour of db.system.get("_storage", id), still served.
+      const meta = await ctx.storage.getMetadata(id);
+      await ctx.storage.delete(id);
+      return `size ${meta?.size} · ${meta?.contentType} · sha256 ${meta?.sha256.slice(0, 8)}…`;
+    });
+    return { audit, serviceUrl, serviceToken, metadata };
+  },
+});
+
+/**
+ * `ctx.db.table(name)`: a database scoped to one table. The generated
+ * `mutation` types `ctx.db` without it, so the `WithTable` interface from
+ * `convex/server` is applied here.
+ */
+export const viaTable = mutation({
+  args: {},
+  returns: v.object({ inserted: v.string(), patched: v.number(), readBack: v.union(v.string(), v.null()), queried: v.number(), deleted: v.boolean() }),
+  handler: async (ctx) => {
+    const owner = await requireUserId(ctx);
+    const samples = (ctx.db as unknown as GenericDatabaseWriterWithTable<DataModel>).table("samples");
+    const id = await samples.insert({ ownerId: owner, label: "via db.table", counts: {}, payload: new ArrayBuffer(0), big: 0n, extra: null, note: null, revision: 0 });
+    await samples.patch(id, { revision: 7 });
+    const doc = await samples.get(id);
+    const queried = (await samples.query().withIndex("by_owner", (q) => q.eq("ownerId", owner)).collect()).length;
+    await samples.delete(id);
+    return { inserted: id, patched: doc?.revision ?? -1, readBack: doc?.label ?? null, queried, deleted: (await samples.get(id)) === null };
+  },
+});
+
+/** `log.audit` from a mutation, with every `log.vars` placeholder. */
+export const audit = mutation({
+  args: {},
+  handler: async (ctx): Promise<Probe> => {
+    await requireUserId(ctx);
+    return probe(async () => {
+      await log.audit({
+        action: "lab.audit",
+        requestId: log.vars.requestId,
+        actor: log.vars.convexActor,
+        ip: log.vars.ip,
+        userAgent: log.vars.userAgent,
+        at: log.vars.now,
+        detail: { nested: [1, "two", true] },
+      });
+      return "recorded";
+    });
   },
 });

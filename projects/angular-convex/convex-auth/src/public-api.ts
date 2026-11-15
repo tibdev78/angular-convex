@@ -13,6 +13,7 @@ export * from './lib/oauth/inject-oauth';
 
 export * from './lib/username-password';
 export * from './lib/email-password';
+export * from './lib/anonymous';
 
 export {
   supportsWebAuthn,

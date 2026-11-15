@@ -4,7 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { injectConvexAuth } from 'angular-convex';
 import {
   injectOauth,
+  injectOauthSignIn,
   injectSignInWithEmailPassword,
+  injectSignInAnonymously,
   injectSignInWithGithub,
   injectSignInWithUsernamePasskey,
   injectSignInWithUsernamePassword,
@@ -16,14 +18,14 @@ import {
 import { api } from '../../convex';
 import { userErrorText } from '../../shared/user-error';
 
-type Method = 'username' | 'email' | 'passkey' | 'github';
+type Method = 'username' | 'email' | 'passkey' | 'oauth' | 'anonymous';
 
 @Component({
   selector: 'app-login',
   imports: [FormsModule, RouterLink],
   template: `
     <h1>Sign in</h1>
-    <p class="muted">Four Convex Auth methods, all handled by <code>angular-convex/convex-auth</code>.</p>
+    <p class="muted">Six Convex Auth methods, all handled by <code>angular-convex/convex-auth</code>.</p>
     <nav class="tabs" data-testid="login-tabs">
       @for (m of methods; track m[0]) {
         <button type="button" [class.active]="method() === m[0]" (click)="method.set(m[0])" [attr.data-testid]="'tab-' + m[0]">
@@ -75,15 +77,27 @@ type Method = 'username' | 'email' | 'passkey' | 'github';
             }
           </form>
         }
-        @case ('github') {
+        @case ('oauth') {
           <div class="stack">
             <button type="button" (click)="github()" data-testid="gh-signin">Continue with GitHub</button>
             <p class="muted">Redirects to GitHub, back to the deployment's <code>/oauth/github/callback</code>, then here with a one-time code.</p>
+            <button type="button" (click)="demoIdp()" data-testid="idp-signin">Continue with the demo OIDC provider</button>
+            <p class="muted">An OpenID Connect provider served by the backend itself (<code>/idp/*</code>): consent page, PKCE,
+              signed <code>id_token</code>, then the same one-time code protocol. A custom method built with <code>bindMethod</code>.</p>
+          </div>
+        }
+        @case ('anonymous') {
+          <div class="stack">
+            <button type="button" (click)="anonymousSignIn()" [disabled]="anonymous.pending()" data-testid="anon-signin">Continue anonymously</button>
+            <p class="muted">A new account with no credentials, every time. Sign out and it is gone for good.</p>
+            @if (anonymousError()) {
+              <p class="error" data-testid="login-error">{{ anonymousError() }}</p>
+            }
           </div>
         }
       }
       @if (oauth.flowError(); as e) {
-        <p class="error" data-testid="oauth-error">GitHub sign-in failed: {{ text(e) }}</p>
+        <p class="error" data-testid="oauth-error">OAuth sign-in failed: {{ text(e) }}</p>
       }
     </section>
   `,
@@ -96,7 +110,8 @@ export class LoginPage {
     ['username', 'Username + password'],
     ['email', 'Email + password'],
     ['passkey', 'Passkey'],
-    ['github', 'GitHub'],
+    ['oauth', 'OAuth'],
+    ['anonymous', 'Anonymous'],
   ] as const;
   protected readonly method = signal<Method>('username');
   protected readonly notice = signal('');
@@ -114,6 +129,14 @@ export class LoginPage {
   protected readonly passkey = injectSignInWithUsernamePasskey(api.auth);
   protected readonly oauth = injectOauth();
   private readonly githubSignIn = injectSignInWithGithub(api.auth);
+  /** Any provider exporting the two OAuth mutations works with the generic hook. */
+  private readonly demoIdpSignIn = injectOauthSignIn({
+    providerName: 'demoIdp',
+    startSignIn: api.auth.startSignInWithDemoIdp,
+    completeSignIn: api.auth.completeSignInWithDemoIdp,
+  });
+  protected readonly anonymous = injectSignInAnonymously(api.auth);
+  protected readonly anonymousError = signal('');
 
   protected readonly text = userErrorText;
 
@@ -157,8 +180,22 @@ export class LoginPage {
   }
 
   protected github(): void {
+    void this.githubSignIn.signIn({ redirectTo: this.backHere() });
+  }
+
+  protected demoIdp(): void {
+    void this.demoIdpSignIn.signIn({ redirectTo: this.backHere() });
+  }
+
+  protected async anonymousSignIn(): Promise<void> {
+    this.anonymousError.set('');
+    await this.anonymous.signIn().catch((error: unknown) => this.anonymousError.set(String(error)));
+  }
+
+  /** The OAuth flows come back to this page, which then opens `next`. */
+  private backHere(): string {
     const back = new URL('/login', window.location.origin);
     back.searchParams.set('next', this.next() || '/todos');
-    void this.githubSignIn.signIn({ redirectTo: back.toString() });
+    return back.toString();
   }
 }

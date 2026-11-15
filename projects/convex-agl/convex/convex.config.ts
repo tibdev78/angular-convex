@@ -7,6 +7,7 @@ import authEmail from "@convex-dev/auth/components/email/convex.config";
 import authPasskey from "@convex-dev/auth/components/passkey/convex.config";
 import authGithub from "@convex-dev/auth/components/github/convex.config";
 import resend from "./resend/convex.config";
+import demoAuth from "./demoAuth/convex.config";
 
 const app = defineApp({
   env: {
@@ -31,5 +32,7 @@ app.use(authGithub, {
   },
 });
 app.use(resend);
+// Accounts for the anonymous and demo OIDC sign-in methods (see ./auth.ts).
+app.use(demoAuth);
 
 export default app;

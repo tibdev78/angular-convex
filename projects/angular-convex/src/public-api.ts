@@ -8,6 +8,7 @@ export * from './lib/query/inject-query';
 export * from './lib/query/inject-queries';
 export * from './lib/query/inject-paginated-query';
 export * from './lib/query/prewarm';
+export * from './lib/query/query-options';
 export * from './lib/mutation/inject-mutation';
 export * from './lib/action/inject-action';
 export * from './lib/connection/inject-connection-state';

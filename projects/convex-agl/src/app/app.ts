@@ -10,6 +10,7 @@ import {
   injectQuery,
 } from 'angular-convex';
 import { api } from './convex';
+import { labSamples } from './shared/queries';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +26,7 @@ export class App {
   protected warm(path: string): void {
     if (path === 'todos') this.prewarm(api.todos.list, { filter: 'all' });
     if (path === 'mail') this.prewarm(api.mail.inbox, {});
-    if (path === 'lab') this.prewarm(api.lab.list, {});
+    if (path === 'lab') this.prewarm(labSamples.query, labSamples.args);
   }
   protected readonly links = [
     ['todos', 'Todos'],
