@@ -22,7 +22,7 @@ async function touch(ctx: MutationCtx, userId: Id<"users">) {
 export const createUserUsernamePassword = internalMutation({
   args: { method: method("usernamePassword", noProfile) },
   returns: v.id("users"),
-  handler: (ctx) => ctx.db.insert("users", { name: "Username user", method: "usernamePassword" }),
+  handler: (ctx) => ctx.db.insert("users", { method: "usernamePassword" }),
 });
 export const onSignInUsernamePassword = internalMutation({
   args: { method: method("usernamePassword", noProfile), userId: v.id("users") },
@@ -44,7 +44,7 @@ export const onSignInEmailPassword = internalMutation({
 export const createUserPasskey = internalMutation({
   args: { method: method("usernamePasskey", noProfile) },
   returns: v.id("users"),
-  handler: (ctx) => ctx.db.insert("users", { name: "Passkey user", method: "usernamePasskey" }),
+  handler: (ctx) => ctx.db.insert("users", { method: "usernamePasskey" }),
 });
 export const onSignInPasskey = internalMutation({
   args: { method: method("usernamePasskey", noProfile), userId: v.id("users") },
@@ -96,12 +96,13 @@ export const me = query({
       user.username ?? (await ctx.runQuery(components.authUsername.public.getUsername, { userId }));
     const email =
       user.email ?? (await ctx.runQuery(components.authEmail.verifiedEmails.getPrimaryEmail, { userId }));
+    const primaryEmail = typeof email === "string" ? email : null;
     return {
       _id: user._id,
-      name: user.name,
+      name: user.name ?? username ?? primaryEmail ?? "Anonymous",
       method: user.method,
       username: username ?? null,
-      email: typeof email === "string" ? email : null,
+      email: primaryEmail,
       avatarUrl: user.avatarUrl ?? null,
     };
   },

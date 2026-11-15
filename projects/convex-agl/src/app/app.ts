@@ -1,15 +1,17 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { injectConvexConnectionState } from 'angular-convex';
+import { ConvexAuthenticated, ConvexAuthLoading, ConvexUnauthenticated, injectConvexConnectionState, injectQuery } from 'angular-convex';
+import { api } from './convex';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConvexAuthenticated, ConvexUnauthenticated, ConvexAuthLoading],
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {
   protected readonly connection = injectConvexConnectionState();
+  protected readonly me = injectQuery(api.users.me);
   protected readonly links = [
     ['todos', 'Todos'],
     ['chat', 'Chat'],

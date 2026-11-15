@@ -26,7 +26,7 @@ type Priority = 'low' | 'medium' | 'high';
             <option [ngValue]="p._id">{{ p.name }}</option>
           }
         </select>
-        <button type="submit" [disabled]="!text.trim()" data-testid="todo-add">Add</button>
+        <button type="submit" [disabled]="!text().trim()" data-testid="todo-add">Add</button>
       </form>
       @if (add.error(); as e) { <p class="error" data-testid="todo-error">{{ e.message }}</p> }
     </section>
@@ -101,7 +101,7 @@ export class TodosPage {
   protected readonly filter = signal<Filter>('all');
   protected readonly search = signal('');
   protected readonly onlyActive = signal(false);
-  protected text = '';
+  protected readonly text = signal('');
   protected priority: Priority = 'medium';
   protected projectId: Id<'projects'> | undefined;
   protected projectName_ = '';
@@ -147,9 +147,9 @@ export class TodosPage {
   }
 
   protected async addTodo(): Promise<void> {
-    const text = this.text;
-    this.text = '';
-    await this.add({ text, priority: this.priority, projectId: this.projectId }).catch(() => (this.text = text));
+    const text = this.text();
+    this.text.set('');
+    await this.add({ text, priority: this.priority, projectId: this.projectId }).catch(() => this.text.set(text));
   }
 
   protected async addProject(): Promise<void> {

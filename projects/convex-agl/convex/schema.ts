@@ -10,7 +10,8 @@ export default defineSchema({
   // App users. Convex Auth stores credentials in its components and only
   // keeps the id of the row created by our `createUser` callbacks.
   users: defineTable({
-    name: v.string(),
+    // Unset until the user picks one; see `displayName` in ./lib.ts.
+    name: v.optional(v.string()),
     method: v.string(),
     email: v.optional(v.string()),
     username: v.optional(v.string()),

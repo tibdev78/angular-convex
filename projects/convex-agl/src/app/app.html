@@ -6,6 +6,11 @@
     }
   </nav>
   <span class="grow"></span>
+  <span class="user" *convexAuthenticated>
+    <a routerLink="account" routerLinkActive="active" data-testid="me">{{ me()?.name ?? '…' }}</a>
+  </span>
+  <a *convexUnauthenticated routerLink="login" routerLinkActive="active" data-testid="login-link">Sign in</a>
+  <span *convexAuthLoading class="muted">…</span>
   <span class="conn" [class.on]="connection().isWebSocketConnected" data-testid="connection">
     {{ connection().isWebSocketConnected ? 'Live' : 'Offline' }}
   </span>

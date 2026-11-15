@@ -17,7 +17,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Uses the installed Google Chrome (no browser download); set PW_CHANNEL=chromium for Playwright's own build.
+  projects: [{ name: 'chrome', use: { ...devices['Desktop Chrome'], channel: process.env['PW_CHANNEL'] ?? 'chrome' } }],
   webServer: {
     command: 'npx ng serve convex-agl --port 4200',
     url: 'http://localhost:4200',

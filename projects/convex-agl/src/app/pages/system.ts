@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { injectAction, injectConvexConnectionState, injectConvexHttpClient, injectMutation, injectQuery } from 'angular-convex';
 import { api } from '../convex';
@@ -32,7 +32,7 @@ import { environment } from '../../environments/environment';
         <button class="ghost" type="button" (click)="oneShot()" data-testid="http-query">ConvexHttpClient query</button>
       </div>
       <pre data-testid="ping-result">{{ ping.data() | json }}</pre>
-      <pre data-testid="http-result">{{ http | json }}</pre>
+      <pre data-testid="http-result">{{ http() | json }}</pre>
       <p class="muted">HTTP route: <a [href]="site + '/api/health'" target="_blank">{{ site }}/api/health</a></p>
     </section>
   `,
@@ -44,7 +44,7 @@ export class SystemPage {
   protected readonly fail = injectMutation(api.system.fail);
   protected readonly ping = injectAction(api.system.ping);
   private readonly httpClient = injectConvexHttpClient();
-  protected http: unknown;
+  protected readonly http = signal<unknown>(undefined);
   protected readonly text = errorText;
 
   protected triggerError(): void {
@@ -52,6 +52,6 @@ export class SystemPage {
   }
 
   protected async oneShot(): Promise<void> {
-    this.http = await this.httpClient.query(api.system.cronStat, {});
+    this.http.set(await this.httpClient.query(api.system.cronStat, {}));
   }
 }

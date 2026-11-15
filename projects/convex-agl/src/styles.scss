@@ -53,3 +53,6 @@ ul.list > li:last-child { border-bottom: none; }
 .tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
 .tabs button { background: transparent; color: var(--text); border-color: var(--border); }
 .tabs button.active { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+
+.stack { display: flex; flex-direction: column; gap: var(--space-2); max-width: 28rem; }
+.notice { color: var(--success); }

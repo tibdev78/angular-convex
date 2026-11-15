@@ -2,7 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { requireUserId } from "./lib";
+import { displayName, requireUserId } from "./lib";
 
 /** Joins each message with its author and image URL. */
 async function enrich(ctx: QueryCtx, messages: Doc<"messages">[]) {
@@ -11,7 +11,7 @@ async function enrich(ctx: QueryCtx, messages: Doc<"messages">[]) {
       const author = await ctx.db.get(m.authorId);
       return {
         ...m,
-        author: author ? { name: author.name, avatarUrl: author.avatarUrl ?? null } : null,
+        author: author ? { name: await displayName(ctx, author), avatarUrl: author.avatarUrl ?? null } : null,
         imageUrl: m.imageId ? await ctx.storage.getUrl(m.imageId) : null,
       };
     }),

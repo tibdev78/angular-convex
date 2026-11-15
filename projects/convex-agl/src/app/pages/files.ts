@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { injectFileUpload, injectMutation, injectQuery } from 'angular-convex';
 import { api, type Id } from '../convex';
@@ -13,7 +13,7 @@ import { errorText } from '../shared/errors';
       <div class="row">
         <input type="file" accept="image/*" multiple (change)="uploadAll($event)" data-testid="file-input" />
         @if (upload.isUploading()) { <span class="muted" data-testid="upload-progress">{{ upload.progress() }}%</span> }
-        @if (error) { <span class="error" data-testid="upload-error">{{ error }}</span> }
+        @if (error()) { <span class="error" data-testid="upload-error">{{ error() }}</span> }
       </div>
       <p class="muted">Upload URL → POST blob → <code>saveImage</code> checks <code>_storage</code> metadata (image, ≤ 5 MB).</p>
     </section>
@@ -43,17 +43,17 @@ export class FilesPage {
   protected readonly upload = injectFileUpload(api.files.generateUploadUrl);
   protected readonly save = injectMutation(api.files.saveImage);
   protected readonly remove = injectMutation(api.files.remove);
-  protected error = '';
+  protected readonly error = signal('');
 
   protected async uploadAll(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    this.error = '';
+    this.error.set('');
     for (const file of Array.from(input.files ?? [])) {
       try {
         const storageId = (await this.upload.upload(file)) as Id<'_storage'>;
         await this.save({ storageId, name: file.name });
       } catch (e) {
-        this.error = errorText(e);
+        this.error.set(errorText(e));
       }
     }
     input.value = '';

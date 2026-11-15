@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
-import { requireUserId } from "./lib";
+import { displayName, requireUserId } from "./lib";
 
 /** A client is "online" if its last heartbeat is more recent than this. */
 export const ONLINE_MS = 30_000;
@@ -48,7 +48,7 @@ export const list = query({
     return await Promise.all(
       rows.map(async (row) => {
         const user = await ctx.db.get(row.userId);
-        return { userId: row.userId, name: user?.name ?? "?", typing: row.typing, lastSeen: row.lastSeen };
+        return { userId: row.userId, name: user ? await displayName(ctx, user) : "?", typing: row.typing, lastSeen: row.lastSeen };
       }),
     );
   },
