@@ -37,9 +37,18 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      # The optional secrets turn on the full GitHub OAuth round trip (see the
+      # README); without them it is skipped and placeholders are used.
       - run: scripts/ci-backend.sh
+        env:
+          AUTH_GITHUB_CLIENT_ID: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_ID }}
+          AUTH_GITHUB_CLIENT_SECRET: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_SECRET }}
       - run: npm run build:lib
       - run: npx playwright test
+        env:
+          E2E_GITHUB_LOGIN: ${{ secrets.E2E_GITHUB_LOGIN }}
+          E2E_GITHUB_PASSWORD: ${{ secrets.E2E_GITHUB_PASSWORD }}
+          E2E_GITHUB_TOTP_SECRET: ${{ secrets.E2E_GITHUB_TOTP_SECRET }}
       - name: Dashboard features from the CLI
         run: scripts/dashboard-cli.sh | tee dashboard-cli.txt
       - if: always()

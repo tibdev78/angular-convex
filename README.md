@@ -110,6 +110,22 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 
 No secret is needed. GitHub and Google are only tested up to the redirect, so placeholder client ids are enough; Apple stays `not-configured` unless the `AUTH_APPLE_*` variables are present.
 
+#### Optional: full GitHub OAuth round trip
+
+With these repository secrets, the e2e job also signs in to GitHub for real and comes back to the app:
+
+| Secret | Value |
+|---|---|
+| `E2E_GITHUB_OAUTH_CLIENT_ID` / `E2E_GITHUB_OAUTH_CLIENT_SECRET` | A GitHub OAuth app whose callback URL is `http://127.0.0.1:3211/oauth/github/callback` (the CI backend). |
+| `E2E_GITHUB_LOGIN` / `E2E_GITHUB_PASSWORD` | A dedicated test account, never a personal one. |
+| `E2E_GITHUB_TOTP_SECRET` | The base32 key of the account's authenticator-app 2FA. Without 2FA, GitHub sends an emailed device code from a new machine, which a test cannot read. |
+
+Locally, export the `E2E_GITHUB_*` variables and set the OAuth app with `npx convex env set`. On CI the account's screenshots are not taken, because artifacts of a public repository are public.
+
+#### On a paid Convex team
+
+`E2E_EXPECT_SERVICE_TOKEN=1 E2E_CONFIG=cloud npx playwright test e2e/lab.spec.ts` requires `getServiceToken` to return a token instead of accepting the free-plan refusal.
+
 ## License
 
 MIT

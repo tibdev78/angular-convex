@@ -128,8 +128,11 @@ test.describe('Lab: remaining server primitives', () => {
     // getServiceToken depends on the deployment: an anonymous local backend (CI)
     // asks for `npx convex login`; a cloud team on the free plan is told the AI
     // gateway needs a paid plan; a paid team gets a token (only its length is shown).
+    // E2E_EXPECT_SERVICE_TOKEN=1 (a paid team) requires the token itself.
     await expect(platform).toContainText(
-      /token of \d+ chars|requires an authenticated local deployment|AI gateway is not enabled for your team/,
+      process.env['E2E_EXPECT_SERVICE_TOKEN']
+        ? /token of \d+ chars/
+        : /token of \d+ chars|requires an authenticated local deployment|AI gateway is not enabled for your team/,
     );
     // Audit logging is refused in actions by every deployment.
     await expect(platform).toContainText('Audit logging is not yet supported in actions');
