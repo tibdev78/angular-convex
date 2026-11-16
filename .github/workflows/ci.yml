@@ -52,6 +52,9 @@ jobs:
           E2E_GITHUB_LOGIN: ${{ secrets.E2E_GITHUB_LOGIN }}
           E2E_GITHUB_PASSWORD: ${{ secrets.E2E_GITHUB_PASSWORD }}
           E2E_GITHUB_TOTP_SECRET: ${{ secrets.E2E_GITHUB_TOTP_SECRET }}
+          E2E_GITHUB_PASSKEY_ID: ${{ secrets.E2E_GITHUB_PASSKEY_ID }}
+          E2E_GITHUB_PASSKEY_KEY: ${{ secrets.E2E_GITHUB_PASSKEY_KEY }}
+          E2E_GITHUB_PASSKEY_USER: ${{ secrets.E2E_GITHUB_PASSKEY_USER }}
       - name: Dashboard features from the CLI
         run: scripts/dashboard-cli.sh | tee dashboard-cli.txt
       - if: always()

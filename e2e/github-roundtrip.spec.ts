@@ -16,18 +16,50 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
   const login = process.env['E2E_GITHUB_LOGIN'];
   const password = process.env['E2E_GITHUB_PASSWORD'];
   const totpSecret = process.env['E2E_GITHUB_TOTP_SECRET'];
+  // A passkey registered for the test account (scripts/register-github-passkey.mjs
+  // or the DevTools WebAuthn panel): it replaces both the password and 2FA.
+  const passkey = {
+    id: process.env['E2E_GITHUB_PASSKEY_ID'],
+    key: process.env['E2E_GITHUB_PASSKEY_KEY'],
+    user: process.env['E2E_GITHUB_PASSKEY_USER'],
+  };
+  const usePasskey = !!(passkey.id && passkey.key && passkey.user);
   // CI artifacts of a public repository are public: no screenshot of the
   // test account's pages there.
   const proof = process.env['CI'] ? async (_step: string) => undefined : (step: string) => shot(page, info, step);
-  test.skip(!login || !password, 'E2E_GITHUB_LOGIN / E2E_GITHUB_PASSWORD are not set');
-  test.setTimeout(process.env['E2E_GITHUB_TOTP_SECRET'] ? 90_000 : 180_000);
+  test.skip(!usePasskey && (!login || !password), 'Neither E2E_GITHUB_PASSKEY_* nor E2E_GITHUB_LOGIN / E2E_GITHUB_PASSWORD are set');
+  test.setTimeout(usePasskey || totpSecret ? 90_000 : 180_000);
+  if (usePasskey) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('WebAuthn.enable');
+    const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
+      options: { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true },
+    });
+    await cdp.send('WebAuthn.addCredential', {
+      authenticatorId,
+      credential: {
+        credentialId: passkey.id!,
+        isResidentCredential: true,
+        rpId: 'github.com',
+        privateKey: passkey.key!,
+        userHandle: passkey.user!,
+        // GitHub may refuse a counter that does not grow: seconds since the
+        // epoch always exceed the previous run's.
+        signCount: Math.floor(Date.now() / 1000),
+      },
+    });
+  }
   await page.goto('/login');
   await page.getByTestId('tab-oauth').click();
   await page.getByTestId('gh-signin').click();
   await page.waitForURL(/github\.com\/login/);
-  await page.locator('#login_field').fill(login!);
-  await page.locator('#password').fill(password!);
-  await page.locator('input[name="commit"]').click();
+  if (usePasskey) {
+    await page.getByRole('button', { name: /sign in with a passkey/i }).click();
+  } else {
+    await page.locator('#login_field').fill(login!);
+    await page.locator('#password').fill(password!);
+    await page.locator('input[name="commit"]').click();
+  }
   // A refused sign-in stays on /session: report GitHub's own message (or its
   // CAPTCHA) instead of a bare timeout. Nothing here echoes the credentials.
   await page.waitForLoadState('load');
@@ -39,7 +71,7 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
     const shape = (v: string) => `len=${v.length} trimmed=${v.trim().length}`;
     throw new Error(
       `GitHub refused the sign-in: flash="${flash}" captcha=${captcha > 0} h1="${heading}" ` +
-        `login(${shape(login!)} isTestAccount=${login!.trim() === 'ttbdsv'}) password(${shape(password!)} equalsTotpSecret=${password === totpSecret})`,
+        (usePasskey ? 'passkey' : `login(${shape(login!)} isTestAccount=${login!.trim() === 'ttbdsv'}) password(${shape(password!)} equalsTotpSecret=${password === totpSecret})`),
     );
   }
 
