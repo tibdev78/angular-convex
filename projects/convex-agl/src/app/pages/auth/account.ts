@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { injectMutation, injectQuery } from 'angular-convex';
+import { injectMutation, injectQuery } from 'ngx-convex';
 import {
   injectAddPasskey,
   injectAuthActions,
@@ -10,7 +10,7 @@ import {
   injectAuthToken,
   injectRemovePasskey,
   injectStartChangeEmail,
-} from 'angular-convex/convex-auth';
+} from 'ngx-convex/convex-auth';
 import { api } from '../../convex';
 import { errorText } from '../../shared/errors';
 import { userErrorText } from '../../shared/user-error';

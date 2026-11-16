@@ -10,7 +10,7 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 
 ## Client — `convex/react` and `convex/browser`
 
-| Convex | angular-convex | Demo | Test |
+| Convex | ngx-convex | Demo | Test |
 |---|---|---|---|
 | `ConvexReactClient`, `ConvexProvider`, `useConvex` | `provideConvex`, `injectConvex` | `app/app.config.ts` | `provide-convex` (via every spec), all e2e |
 | `ConvexClient` options (`skipConvexDeploymentUrlCheck`, `unsavedChangesWarning`, …) | `provideConvex({ url, options })` | `app/app.config.ts` | compat matrix |
@@ -88,9 +88,9 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | `scheduler.runAfter`, `scheduler.runAt`, `scheduler.cancel` | `jobs.ts`, `mail.ts`, `lab.ts` | `features.spec` (jobs, mail), `lab.spec` |
 | `crons.interval`, `crons.cron`, `hourly`, `daily`, `weekly`, `monthly` | `convex/crons.ts` | `features.spec` (jobs counter), `lab.spec` (stats) |
 
-## Convex Auth 2.0 — `angular-convex/convex-auth`
+## Convex Auth 2.0 — `ngx-convex/convex-auth`
 
-| Convex Auth | angular-convex | Demo | Test |
+| Convex Auth | ngx-convex | Demo | Test |
 |---|---|---|---|
 | `ConvexAuthProvider`, token storage, OAuth redirect completion | `provideConvexAuthClient` | `app.config.ts` | `provide-convex-auth-client.spec` |
 | `useAuthActions` (`signOut`), `useAuthToken` | `injectAuthActions`, `injectAuthToken`, `injectAuthState` | `account.ts` | `auth.spec` |
@@ -122,6 +122,6 @@ Screenshots of the cloud dashboard (functions, tables, crons) are in [`docs/scre
 
 | Convex | Why there is no Angular counterpart |
 |---|---|
-| `resetPaginationId` | It resets a module-level counter used by React's `usePaginatedQuery` so test runs get stable ids. `angular-convex` keeps no such counter: paginated subscriptions belong to the `ConvexClient`. Tests isolate by creating a new `FakeConvexClient` (or calling `close()`), which drops every paginated listener. |
+| `resetPaginationId` | It resets a module-level counter used by React's `usePaginatedQuery` so test runs get stable ids. `ngx-convex` keeps no such counter: paginated subscriptions belong to the `ConvexClient`. Tests isolate by creating a new `FakeConvexClient` (or calling `close()`), which drops every paginated listener. |
 | Convex Auth's `setupAnonymous` and generic OAuth server setup | Shipped in `@convex-dev/auth` 2.0 but not exported. The demo builds the same methods with `bindMethod` (see above). |
 | Sign in with Apple, live | Wired and tested up to Apple's authorize page. Signing in for real needs a paid Apple Developer account: set `AUTH_APPLE_CLIENT_ID`, `AUTH_APPLE_TEAM_ID`, `AUTH_APPLE_KEY_ID`, `AUTH_APPLE_PRIVATE_KEY` (they default to `not-configured`, which disables the button). |

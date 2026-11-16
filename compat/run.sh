@@ -2,11 +2,11 @@
 # Compatibility matrix for the published package.
 #
 # For every "<angular>:<node>:<convex>" row, creates a fresh Angular CLI app with
-# that Node version (fnm), installs the packed angular-convex tarball, drops in
+# that Node version (fnm), installs the packed ngx-convex tarball, drops in
 # the smoke app (compat/template) and runs a production build. compat.spec.ts
 # then serves each build and drives it against a live Convex backend.
 #
-#   npm run build:lib && (cd dist/angular-convex && npm pack --pack-destination ../../compat)
+#   npm run build:lib && (cd dist/ngx-convex && npm pack --pack-destination ../../compat)
 #   compat/run.sh                       # default matrix
 #   compat/run.sh 19:20:1.48.0          # one row
 #   compat/run.sh latest:24:latest      # npm dist-tags work too (next, latest…)
@@ -17,9 +17,9 @@ set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 # Outside any Angular workspace: `ng new` refuses to run inside one.
-apps="${COMPAT_APPS:-${TMPDIR:-/tmp}/angular-convex-compat}"
-tarball="$(ls "$here"/angular-convex-*.tgz 2>/dev/null | tail -1)"
-[ -n "$tarball" ] || { echo "No angular-convex-*.tgz in compat/ — pack the library first." >&2; exit 2; }
+apps="${COMPAT_APPS:-${TMPDIR:-/tmp}/ngx-convex-compat}"
+tarball="$(ls "$here"/ngx-convex-*.tgz 2>/dev/null | tail -1)"
+[ -n "$tarball" ] || { echo "No ngx-convex-*.tgz in compat/ — pack the library first." >&2; exit 2; }
 
 # convex >= 1.49 requires Node 22; Node 20 rows use the last release that runs there.
 rows=("${@:-17:20:1.48.0 18:20:1.48.0 19:20:1.48.0 20:20:1.48.0 21:20:1.48.0 21:24:1.50.0 22:22:1.50.0 22:24:1.50.0}")

@@ -1,5 +1,5 @@
 {
-  "name": "angular-convex",
+  "name": "ngx-convex-workspace",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -7,8 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build:lib": "ng build angular-convex",
-    "test:lib": "ng test angular-convex --watch=false",
+    "build:lib": "ng build ngx-convex",
+    "test:lib": "ng test ngx-convex --watch=false",
     "e2e": "playwright test",
     "compat": "compat/run.sh",
     "compat:e2e": "playwright test -c compat/playwright.config.ts"

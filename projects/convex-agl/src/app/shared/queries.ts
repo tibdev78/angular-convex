@@ -1,4 +1,4 @@
-import { convexQueryOptions } from 'angular-convex';
+import { convexQueryOptions } from 'ngx-convex';
 import { api } from '../convex';
 
 /** One `{ query, args }` value shared by the nav prewarm and the Lab page. */

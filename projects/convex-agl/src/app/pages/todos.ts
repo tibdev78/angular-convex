@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { injectMutation, injectQueries, injectQuery } from 'angular-convex';
+import { injectMutation, injectQueries, injectQuery } from 'ngx-convex';
 import { api, type Id } from '../convex';
 
 type Filter = 'all' | 'active' | 'done';

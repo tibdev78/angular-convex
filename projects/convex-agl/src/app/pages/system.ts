@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { injectAction, injectConvexConnectionState, injectConvexHttpClient, injectMutation, injectQuery } from 'angular-convex';
+import { injectAction, injectConvexConnectionState, injectConvexHttpClient, injectMutation, injectQuery } from 'ngx-convex';
 import { api } from '../convex';
 import { errorText } from '../shared/errors';
 import { environment } from '../../environments/environment';

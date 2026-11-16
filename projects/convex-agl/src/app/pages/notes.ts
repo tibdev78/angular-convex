@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { injectAction, injectMutation, injectQuery } from 'angular-convex';
+import { injectAction, injectMutation, injectQuery } from 'ngx-convex';
 import { api } from '../convex';
 
 @Component({

@@ -55,7 +55,7 @@ test.describe('Demo features', () => {
     await add('Water the tomatoes', 'high');
     await page.getByTestId('todo-project').selectOption({ label: 'No project' });
     await add('Buy oat milk', 'low');
-    await add('Write the angular-convex README', 'medium');
+    await add('Write the ngx-convex README', 'medium');
     await expect(page.getByTestId('todo-stats')).toHaveText('0/3 done · high 1');
     // Tab counts come from injectQueries: one live subscription per filter.
     await expect(page.getByTestId('count-all')).toHaveText('3');

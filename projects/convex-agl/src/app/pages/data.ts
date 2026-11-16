@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { injectMutation, injectPaginatedQuery, injectQuery } from 'angular-convex';
+import { injectMutation, injectPaginatedQuery, injectQuery } from 'ngx-convex';
 import { api } from '../convex';
 
 type Kind = 'info' | 'warning' | 'error';

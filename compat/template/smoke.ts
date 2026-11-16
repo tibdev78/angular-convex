@@ -7,8 +7,8 @@ import {
   injectMutation,
   injectQuery,
   provideConvex,
-} from 'angular-convex';
-import { injectSignUpWithUsernamePassword, provideConvexAuthClient } from 'angular-convex/convex-auth';
+} from 'ngx-convex';
+import { injectSignUpWithUsernamePassword, provideConvexAuthClient } from 'ngx-convex/convex-auth';
 import { api } from './api';
 
 
@@ -20,7 +20,7 @@ const CONVEX_URL = (globalThis as { CONVEX_URL?: string }).CONVEX_URL ?? 'http:/
 export const smokeProviders = [provideConvex(CONVEX_URL), provideConvexAuthClient({ api: api.auth })];
 
 /**
- * Exercises the public surface of angular-convex against the convex-agl demo
+ * Exercises the public surface of ngx-convex against the convex-agl demo
  * backend: query, auth directives, convex-auth sign-up, authenticated query,
  * mutation with a live update, action, connection state.
  */
@@ -30,7 +30,7 @@ export const smokeProviders = [provideConvex(CONVEX_URL), provideConvexAuthClien
   imports: [ConvexAuthenticated, ConvexUnauthenticated],
   template: `
     <main style="font: 16px system-ui; padding: 24px; max-width: 720px">
-      <h1>angular-convex compat — Angular <span data-testid="ng-version">{{ version }}</span></h1>
+      <h1>ngx-convex compat — Angular <span data-testid="ng-version">{{ version }}</span></h1>
       <p>WebSocket: <strong data-testid="ws">{{ connection().isWebSocketConnected ? 'connected' : 'down' }}</strong></p>
       <p>Public query <code>system.info</code>: <strong data-testid="query">{{ info() ? 'ok' : '…' }}</strong></p>
       <p *convexUnauthenticated data-testid="signed-out">

@@ -84,10 +84,10 @@ test.describe('Lab: remaining server primitives', () => {
 
     await page.getByTestId('lab-digest').click();
     const digest = page.getByTestId('lab-digest-result');
-    // sha256("angular-convex"), computed with node:crypto in the Node runtime.
+    // sha256("ngx-convex"), computed with node:crypto in the Node runtime.
     await expect(digest).toContainText('"sha256": "');
     await expect(digest).toContainText('"node": "v');
-    await expect(digest).toContainText('"readBack": "angular-convex\\nsha256=');
+    await expect(digest).toContainText('"readBack": "ngx-convex\\nsha256=');
     await shot(page, info, 'nested-and-node');
 
     await page.getByTestId('lab-http-anon').click();

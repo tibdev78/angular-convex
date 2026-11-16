@@ -4,8 +4,8 @@
   "compileOnSave": false,
   "compilerOptions": {
     "paths": {
-      "angular-convex": ["./dist/angular-convex"],
-      "angular-convex/*": ["./dist/angular-convex/*"]
+      "ngx-convex": ["./dist/ngx-convex"],
+      "ngx-convex/*": ["./dist/ngx-convex/*"]
     },
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -26,10 +26,10 @@
   "files": [],
   "references": [
     {
-      "path": "./projects/angular-convex/tsconfig.lib.json"
+      "path": "./projects/ngx-convex/tsconfig.lib.json"
     },
     {
-      "path": "./projects/angular-convex/tsconfig.spec.json"
+      "path": "./projects/ngx-convex/tsconfig.spec.json"
     },
     {
       "path": "./projects/convex-agl/tsconfig.app.json"

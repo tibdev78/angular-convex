@@ -6,20 +6,20 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "angular-convex": {
+    "ngx-convex": {
       "projectType": "library",
-      "root": "projects/angular-convex",
-      "sourceRoot": "projects/angular-convex/src",
+      "root": "projects/ngx-convex",
+      "sourceRoot": "projects/ngx-convex/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular/build:ng-packagr",
           "configurations": {
             "production": {
-              "tsConfig": "projects/angular-convex/tsconfig.lib.prod.json"
+              "tsConfig": "projects/ngx-convex/tsconfig.lib.prod.json"
             },
             "development": {
-              "tsConfig": "projects/angular-convex/tsconfig.lib.json"
+              "tsConfig": "projects/ngx-convex/tsconfig.lib.json"
             }
           },
           "defaultConfiguration": "production"
@@ -27,7 +27,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "tsConfig": "projects/angular-convex/tsconfig.spec.json",
+            "tsConfig": "projects/ngx-convex/tsconfig.spec.json",
             "include": [
               "**/*.spec.ts",
               "../convex-auth/**/*.spec.ts"

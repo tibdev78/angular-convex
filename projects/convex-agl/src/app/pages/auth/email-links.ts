@@ -5,7 +5,7 @@ import {
   injectCompleteChangeEmail,
   injectCompletePasswordRecovery,
   injectCompleteSignUpWithEmailPassword,
-} from 'angular-convex/convex-auth';
+} from 'ngx-convex/convex-auth';
 import { api } from '../../convex';
 import { userErrorText } from '../../shared/user-error';
 

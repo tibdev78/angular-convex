@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { injectConvexAuth, injectQuery } from 'angular-convex';
+import { injectConvexAuth, injectQuery } from 'ngx-convex';
 import {
   injectOauth,
   injectOauthSignIn,
@@ -16,7 +16,7 @@ import {
   injectSignUpWithUsernamePassword,
   injectStartPasswordRecovery,
   supportsWebAuthn,
-} from 'angular-convex/convex-auth';
+} from 'ngx-convex/convex-auth';
 import { api } from '../../convex';
 import { userErrorText } from '../../shared/user-error';
 
@@ -27,7 +27,7 @@ type Method = 'username' | 'email' | 'passkey' | 'oauth' | 'anonymous';
   imports: [FormsModule, RouterLink],
   template: `
     <h1>Sign in</h1>
-    <p class="muted">Eight Convex Auth methods, all handled by <code>angular-convex/convex-auth</code>.</p>
+    <p class="muted">Eight Convex Auth methods, all handled by <code>ngx-convex/convex-auth</code>.</p>
     <nav class="tabs" data-testid="login-tabs">
       @for (m of methods; track m[0]) {
         <button type="button" [class.active]="method() === m[0]" (click)="method.set(m[0])" [attr.data-testid]="'tab-' + m[0]">

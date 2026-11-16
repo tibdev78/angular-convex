@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { injectFileUpload, injectMutation, injectPaginatedQuery, injectQuery, insertAtTop } from 'angular-convex';
+import { injectFileUpload, injectMutation, injectPaginatedQuery, injectQuery, insertAtTop } from 'ngx-convex';
 import { api, type Id } from '../convex';
 
 /** Rounded so the presence query only re-subscribes every 10 s. */

@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { injectMutation, injectQuery } from 'angular-convex';
+import { injectMutation, injectQuery } from 'ngx-convex';
 import { api } from '../convex';
 
 @Component({

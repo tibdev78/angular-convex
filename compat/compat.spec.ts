@@ -4,7 +4,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { extname, join } from 'node:path';
 
-const apps = process.env['COMPAT_APPS'] ?? join(process.env['TMPDIR'] ?? '/tmp', 'angular-convex-compat');
+const apps = process.env['COMPAT_APPS'] ?? join(process.env['TMPDIR'] ?? '/tmp', 'ngx-convex-compat');
 const shots = join(__dirname, 'screenshots');
 
 /** Every `<apps>/<name>/dist/<name>/browser` produced by run.sh. */

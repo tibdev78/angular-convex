@@ -1,7 +1,7 @@
 import { computed, inject, Injector } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Router, type CanActivateFn } from '@angular/router';
-import { injectConvexAuth } from 'angular-convex';
+import { injectConvexAuth } from 'ngx-convex';
 import { filter, map, take } from 'rxjs';
 
 /** Waits for the stored session to be restored, then lets signed-in users through. */

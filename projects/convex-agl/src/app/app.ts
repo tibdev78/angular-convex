@@ -8,7 +8,7 @@ import {
   injectConvexConnectionState,
   injectPrewarmQuery,
   injectQuery,
-} from 'angular-convex';
+} from 'ngx-convex';
 import { api } from './convex';
 import { labSamples } from './shared/queries';
 

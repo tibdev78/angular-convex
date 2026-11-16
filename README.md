@@ -1,4 +1,4 @@
-# angular-convex
+# ngx-convex
 
 [![CI](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml)
 
@@ -6,7 +6,7 @@ Angular bindings for [Convex](https://convex.dev). This repository contains:
 
 | Path | What |
 |---|---|
-| [`projects/angular-convex`](projects/angular-convex) | The library, published as `angular-convex`. It has three entry points: `angular-convex`, `angular-convex/convex-auth` and `angular-convex/testing`. **API documentation: [library README](projects/angular-convex/README.md).** |
+| [`projects/ngx-convex`](projects/ngx-convex) | The library, published as `ngx-convex`. It has three entry points: `ngx-convex`, `ngx-convex/convex-auth` and `ngx-convex/testing`. **API documentation: [library README](projects/ngx-convex/README.md).** |
 | [`projects/convex-agl`](projects/convex-agl) | **convex-agl**, a demo app that exercises every feature against a real backend. |
 | [`projects/convex-agl/convex`](projects/convex-agl/convex) | The demo's Convex backend: schema, functions, auth, crons, HTTP routes. |
 | [`e2e`](e2e) | Playwright end-to-end suite for the demo, run against local or cloud. |
@@ -77,7 +77,7 @@ Point `environment.cloud.ts` at your own deployment.
 ## Tests
 
 ```bash
-npx ng test angular-convex --watch=false           # library unit tests (Vitest)
+npx ng test ngx-convex --watch=false           # library unit tests (Vitest)
 npx playwright test                                # demo e2e against the local backend
 E2E_CONFIG=cloud npx playwright test               # the same suite against the cloud deployment
 ```
@@ -89,7 +89,7 @@ The e2e suite uses the installed Google Chrome (`PW_CHANNEL=chromium` switches t
 ### Compatibility matrix
 
 ```bash
-npm run build:lib && (cd dist/angular-convex && npm pack --pack-destination ../../compat)
+npm run build:lib && (cd dist/ngx-convex && npm pack --pack-destination ../../compat)
 compat/run.sh                                      # one `ng new` app per row, built from the tarball
 npx playwright test -c compat/playwright.config.ts # runs each build against the backend
 ```

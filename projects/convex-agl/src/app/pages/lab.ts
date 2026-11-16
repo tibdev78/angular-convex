@@ -8,7 +8,7 @@ import {
   injectPaginatedQuery,
   injectQuery,
   injectQueryFromOptions,
-} from 'angular-convex';
+} from 'ngx-convex';
 import { labSamples } from '../shared/queries';
 import { api, type Id } from '../convex';
 import { errorText } from '../shared/errors';
@@ -164,7 +164,7 @@ export class LabPage {
   protected readonly note = signal('');
   protected readonly formError = signal<string | null>(null);
   protected readonly rawId = signal('');
-  protected readonly digestText = signal('angular-convex');
+  protected readonly digestText = signal('ngx-convex');
   protected readonly httpResult = signal<unknown>(null);
   protected readonly httpReadBack = signal<string | null>(null);
   protected readonly oneShotResult = signal<unknown>(null);

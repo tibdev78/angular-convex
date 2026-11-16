@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { injectFileUpload, injectMutation, injectQuery } from 'angular-convex';
+import { injectFileUpload, injectMutation, injectQuery } from 'ngx-convex';
 import { api, type Id } from '../convex';
 import { errorText } from '../shared/errors';
 
