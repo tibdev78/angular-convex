@@ -1,5 +1,4 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
-import { createHmac } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -46,19 +45,3 @@ export async function linkFromInbox(page: Page, to: string): Promise<string> {
   return match![0].replaceAll('&amp;', '&');
 }
 
-/** RFC 6238 one-time code (SHA-1, 6 digits, 30 s) from a base32 secret. */
-export function totp(base32Secret: string, now = Date.now()): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
-  for (const char of base32Secret.replace(/[\s=]/g, '').toUpperCase()) {
-    const value = alphabet.indexOf(char);
-    if (value < 0) throw new Error('TOTP secret is not base32');
-    bits += value.toString(2).padStart(5, '0');
-  }
-  const key = Buffer.from(bits.match(/.{8}/g)!.map((byte) => parseInt(byte, 2)));
-  const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(now / 30_000)));
-  const hmac = createHmac('sha1', key).update(counter).digest();
-  const offset = hmac[hmac.length - 1] & 0xf;
-  return String((hmac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, '0');
-}
