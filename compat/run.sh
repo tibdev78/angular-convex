@@ -12,6 +12,7 @@
 #   compat/run.sh latest:24:latest      # npm dist-tags work too (next, latest…)
 #   COMPAT_APPS=/some/dir compat/run.sh # where apps and logs go
 #   COMPAT_AUTH=latest compat/run.sh    # @convex-dev/auth version (default 2.0.0)
+#   COMPAT_NPM_FLAGS=--legacy-peer-deps # e.g. for an Angular prerelease
 set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -55,7 +56,7 @@ for row in "${rows[@]}"; do
   (cd "$apps" && CI=1 NG_CLI_ANALYTICS=false run npx -y "@angular/cli@$ng" new "$name" \
       --directory "$name" --minimal --skip-git --defaults --ssr=false --style=css --routing=false) || create=FAIL
   if [ "$create" = ok ]; then
-    (cd "$dir" && run npm install --no-audit --no-fund "$tarball" "convex@$cvx" "@convex-dev/auth@${COMPAT_AUTH:-2.0.0}") || install=FAIL
+    (cd "$dir" && run npm install --no-audit --no-fund ${COMPAT_NPM_FLAGS:-} "$tarball" "convex@$cvx" "@convex-dev/auth@${COMPAT_AUTH:-2.0.0}") || install=FAIL
   else install=skip; fi
   if [ "$install" = ok ]; then
     cp "$here/template/smoke.ts" "$here/template/api.ts" "$dir/src/"
