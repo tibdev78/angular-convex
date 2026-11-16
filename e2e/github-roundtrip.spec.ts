@@ -68,9 +68,18 @@ test('GitHub OAuth: full round trip with the test account @secrets', async ({ pa
       throw new Error(`GitHub asks for a second factor after the passkey (${path}): the passkey was not accepted as one`);
     }
     if (path.includes('oauth/authorize')) {
-      await proof('github-authorize');
-      await page.locator('button[name="authorize"][value="1"]').click();
-      await page.waitForURL((url) => !url.pathname.includes('oauth/authorize'), { timeout: 30_000 });
+      // Once the app is authorized, GitHub only passes through this URL on its
+      // way back to the app: click Authorize only if the screen really shows.
+      const authorize = page.locator('button[name="authorize"][value="1"]');
+      const next = await Promise.race([
+        page.waitForURL(app, { timeout: 30_000 }).then(() => 'app' as const, () => undefined),
+        authorize.waitFor({ timeout: 30_000 }).then(() => 'authorize' as const, () => undefined),
+      ]);
+      if (next === 'authorize') {
+        await proof('github-authorize');
+        await authorize.click();
+        await page.waitForURL((url) => !url.pathname.includes('oauth/authorize'), { timeout: 30_000 });
+      }
     }
   }
   await expect(page).toHaveURL(app);
