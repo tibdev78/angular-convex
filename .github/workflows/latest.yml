@@ -1,0 +1,71 @@
+name: Latest versions
+
+# Every week, checks the library against the newest Angular, Convex,
+# Convex Auth and Node releases, so a breaking release shows up here before a
+# user hits it. A failed scheduled run notifies the repository owner.
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  library:
+    name: Library — unit tests on convex@latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm install --no-save --no-audit --no-fund convex@latest @convex-dev/auth@latest
+      - run: npm ls convex @convex-dev/auth
+      - run: npm run build:lib
+      - run: npm run test:lib
+      - run: cd dist/angular-convex && npm pack --pack-destination ../../compat
+      - uses: actions/upload-artifact@v4
+        with: { name: tarball, path: compat/angular-convex-*.tgz }
+
+  compat:
+    name: Angular ${{ matrix.angular }} · Node ${{ matrix.node }}
+    needs: library
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # A failing Angular prerelease is an early warning, not a broken build.
+    continue-on-error: ${{ matrix.angular == 'next' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { angular: latest, node: 22 }
+          - { angular: latest, node: 24 }
+          - { angular: latest, node: current }
+          - { angular: next, node: 24 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: tarball, path: compat }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ matrix.node == 'current' && 'node' || matrix.node }}" }
+      - id: node
+        run: echo "major=$(node -p 'process.versions.node.split(".")[0]')" >> "$GITHUB_OUTPUT"
+      - run: compat/run.sh ${{ matrix.angular }}:${{ steps.node.outputs.major }}:latest
+        env:
+          COMPAT_APPS: '${{ runner.temp }}/compat'
+          COMPAT_AUTH: latest
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: scripts/ci-backend.sh
+      - run: npm run compat:e2e
+        env: { COMPAT_APPS: '${{ runner.temp }}/compat' }
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-${{ matrix.angular }}-node${{ matrix.node }}
+          path: |
+            compat/RESULTS.md
+            compat/screenshots
+            ${{ runner.temp }}/compat/*.log

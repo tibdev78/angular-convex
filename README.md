@@ -94,7 +94,7 @@ compat/run.sh                                      # one `ng new` app per row, b
 npx playwright test -c compat/playwright.config.ts # runs each build against the backend
 ```
 
-The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; otherwise the Node on `PATH` must match the row. It exits non-zero if any row fails. The rows are `angular:node:convex`, for example `compat/run.sh 19:20:1.48.0`. Results go to [`compat/RESULTS.md`](compat/RESULTS.md). Run it again for every new Angular major.
+The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; otherwise the Node on `PATH` must match the row. It exits non-zero if any row fails. The rows are `angular:node:convex`, for example `compat/run.sh 19:20:1.48.0`. Results go to [`compat/RESULTS.md`](compat/RESULTS.md). Rows also accept npm dist-tags, for example `compat/run.sh latest:24:latest`, and `COMPAT_AUTH` sets the `@convex-dev/auth` version (default `2.0.0`).
 
 | Angular 17 on Node 20 | Angular 22 on Node 24 |
 |---|---|
@@ -107,6 +107,8 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 - **library**: builds the library, runs the unit tests and packs the tarball;
 - **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
+
+[`.github/workflows/latest.yml`](.github/workflows/latest.yml) runs every Monday (and on demand) against the newest releases: the library's unit tests on `convex@latest` and `@convex-dev/auth@latest`, then the compatibility check with Angular `latest` on Node 22, 24 and the current Node, and Angular `next` (a prerelease failure is reported as a warning only). A failed scheduled run notifies the repository owner, so a breaking release is caught before users hit it.
 
 No secret is needed for the main suite. GitHub and Google are only tested up to the redirect, so placeholder client ids are enough; Apple stays `not-configured` unless the `AUTH_APPLE_*` variables are present.
 
@@ -128,6 +130,21 @@ Locally, export the `E2E_GITHUB_*` variables and set the OAuth app with `npx con
 #### On a paid Convex team
 
 `E2E_EXPECT_SERVICE_TOKEN=1 E2E_CONFIG=cloud npx playwright test e2e/lab.spec.ts` requires `getServiceToken` to return a token instead of accepting the free-plan refusal.
+
+## Limits and paid plans
+
+Everything above runs on Convex's free plan, except the features below. The code for each is in place and documented; what is missing is the account or plan.
+
+| Feature | Needs | State in this repository | Without it |
+|---|---|---|---|
+| Sign in with Apple | A paid Apple Developer account (Services ID, key `.p8`) | Mounted and tested up to Apple's authorize page; the four `AUTH_APPLE_*` variables default to `not-configured`, which disables the button | Apple sign-in is unavailable; every other method works. Apple refuses `localhost`, so it can only be tried on a deployment with a public URL. |
+| `getServiceToken` (Convex-managed services such as the AI gateway) | A paid Convex team | Called in the Lab; the e2e test accepts the free-plan refusal, and `E2E_EXPECT_SERVICE_TOKEN=1` requires the token | `getServiceUrl` works everywhere, but no token is issued, so the managed services cannot be called. |
+| `log.audit` retention | Convex Enterprise | `log.audit` is called from mutations, and from actions through `ctx.runMutation` (Convex refuses it directly in an action) | The call succeeds on every plan but Convex keeps no consultable audit log. **Workaround used by the demo**: write each event to your own table as well (here `auditEvents`, read live by the `auditTrail` query), in the same mutation as the `log.audit` call, so it is transactional with the change it records. That table is yours to secure, retain and purge: Convex gives it no immutability or retention guarantee. |
+
+### Before opening an app to other users
+
+- **Google**: a new OAuth consent screen is in *Testing*, where only the listed test users can sign in (and their tokens expire after seven days). Publishing it *In production* is done in the Google Cloud console by the app's developer; requesting more than the basic `openid`, `email` and `profile` scopes triggers Google's verification. Each app built on this library configures its own Google project.
+- **GitHub**: an OAuth App works for any GitHub user as soon as it exists; only its callback URL must point to the deployment that serves the app.
 
 ## License
 

@@ -9,7 +9,9 @@
 #   npm run build:lib && (cd dist/angular-convex && npm pack --pack-destination ../../compat)
 #   compat/run.sh                       # default matrix
 #   compat/run.sh 19:20:1.48.0          # one row
+#   compat/run.sh latest:24:latest      # npm dist-tags work too (next, latest…)
 #   COMPAT_APPS=/some/dir compat/run.sh # where apps and logs go
+#   COMPAT_AUTH=latest compat/run.sh    # @convex-dev/auth version (default 2.0.0)
 set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -39,7 +41,10 @@ summary="$here/RESULTS.md"
 
 for row in "${rows[@]}"; do
   IFS=: read -r ng node cvx <<< "$row"
-  name="ng${ng}-node${node}"
+  # A dist-tag (latest, next) is resolved so the app name carries the major.
+  [[ "$ng" =~ ^[0-9]+$ ]] || ng="$(npm view "@angular/cli@$ng" version | tail -1)"
+  [[ "$cvx" =~ ^[0-9.]+$ ]] || cvx="$(npm view "convex@$cvx" version | tail -1)"
+  name="ng${ng%%.*}-node${node}"
   dir="$apps/$name"
   log="$apps/$name.log"
   run() { with_node "$@" >> "$log" 2>&1; }
@@ -50,7 +55,7 @@ for row in "${rows[@]}"; do
   (cd "$apps" && CI=1 NG_CLI_ANALYTICS=false run npx -y "@angular/cli@$ng" new "$name" \
       --directory "$name" --minimal --skip-git --defaults --ssr=false --style=css --routing=false) || create=FAIL
   if [ "$create" = ok ]; then
-    (cd "$dir" && run npm install --no-audit --no-fund "$tarball" "convex@$cvx" "@convex-dev/auth@2.0.0") || install=FAIL
+    (cd "$dir" && run npm install --no-audit --no-fund "$tarball" "convex@$cvx" "@convex-dev/auth@${COMPAT_AUTH:-2.0.0}") || install=FAIL
   else install=skip; fi
   if [ "$install" = ok ]; then
     cp "$here/template/smoke.ts" "$here/template/api.ts" "$dir/src/"
