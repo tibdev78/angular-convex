@@ -8,7 +8,7 @@ import type { Signal } from '@angular/core';
 import type { WithInjector } from 'ngx-convex';
 import { createPending } from './pending';
 import { injectConvexAuthContext } from './provide-convex-auth-client';
-import type { SignInEnvelopeLike } from './types';
+import { runSignIn } from './sign-in';
 
 export interface InjectSignInAnonymouslyReturn {
   /** Creates a new anonymous account and signs into it. Rejects if the mutation fails. */
@@ -29,9 +29,8 @@ export function injectSignInAnonymously(
   const { pending, track } = createPending();
   const signIn = () =>
     track(async () => {
-      const result = (await signInApi.mutation(api.signInAnonymously, {})) as SignInEnvelopeLike;
+      const result = await runSignIn(signInApi, client, api.signInAnonymously, {});
       if (result.status !== 'complete') throw new Error('Anonymous sign-in did not complete.');
-      await client.setSession(result.tokens!);
     });
   return { signIn, pending };
 }

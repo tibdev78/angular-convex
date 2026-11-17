@@ -2,8 +2,10 @@
  * Ported from @convex-dev/auth 2.0.0 `src/methods/username-passkey/flows.ts`
  * and `management/flows.ts`. Apache-2.0 © Convex, Inc.
  */
-import type { AuthMutationReference, ConvexMutationApi } from '../types';
-import type { AuthSession, AuthSignInApi, SignInEnvelopeLike } from '../types';
+import type { SignInComplete } from '@convex-dev/auth';
+import type { DefaultFunctionArgs } from 'convex/server';
+import type { AuthMutationReference, AuthSession, AuthSignInApi, ConvexMutationApi } from '../types';
+import { runSignIn } from '../sign-in';
 import type {
   PasskeyClientFailure,
   ResolvedPasskeyCeremonies,
@@ -48,11 +50,11 @@ type StartResult =
 
 /** Completed sign-in (`flow` tells whether an account was created) or an error. */
 export type SignInFlowResult =
-  | (SignInEnvelopeLike & { status: 'complete'; flow: 'signUp' | 'signIn' })
+  | (SignInComplete & { flow: 'signUp' | 'signIn' })
   | { status: 'error'; userError: { error: string; cause?: unknown } };
 
 /** Sign-in functions run on `signInApi`, the others on `convex`: same call shape. */
-const call = <T>(client: ConvexMutationApi, fn: AuthMutationReference, args: Record<string, unknown>): Promise<T> =>
+const call = <T>(client: ConvexMutationApi, fn: AuthMutationReference, args: DefaultFunctionArgs): Promise<T> =>
   client.mutation(fn, args);
 
 /** Registers a new account or signs in to an existing one, by username. */
@@ -60,29 +62,27 @@ export async function runSignInOrSignUpFlow(
   ctx: SignInFlowContext,
   { username }: { username: string },
 ): Promise<SignInFlowResult> {
-  const { convex, api, signInApi, setSession, ceremonies } = ctx;
+  const { convex, api, signInApi, ceremonies } = ctx;
   if (!ceremonies.isSupported()) return { status: 'error', userError: { error: 'WEBAUTHN_UNSUPPORTED' } };
   const start = await call<StartResult>(convex, api.startSignInWithUsernamePasskey, { username });
   if (!start.success) return { status: 'error', userError: start.userError };
   if (start.step === 'register') {
     const ceremony = await ceremonies.register(start.options);
     if (!ceremony.success) return { status: 'error', userError: ceremony.userError };
-    const result = await call<SignInEnvelopeLike>(signInApi, api.finishSignUpWithUsernamePasskey, {
+    const result = await runSignIn(signInApi, ctx, api.finishSignUpWithUsernamePasskey, {
       username,
       response: ceremony.response,
     });
     if (result.status !== 'complete') return result as SignInFlowResult;
-    await setSession(result.tokens!);
-    return { ...result, status: 'complete', flow: 'signUp' };
+    return { ...result, flow: 'signUp' };
   }
   const ceremony = await ceremonies.authenticate(start.options);
   if (!ceremony.success) return { status: 'error', userError: ceremony.userError };
-  const result = await call<SignInEnvelopeLike>(signInApi, api.finishSignInWithUsernamePasskey, {
+  const result = await runSignIn(signInApi, ctx, api.finishSignInWithUsernamePasskey, {
     response: ceremony.response,
   });
   if (result.status !== 'complete') return result as SignInFlowResult;
-  await setSession(result.tokens!);
-  return { ...result, status: 'complete', flow: 'signIn' };
+  return { ...result, flow: 'signIn' };
 }
 
 export interface ManagementFlowContext<Api> {

@@ -7,7 +7,7 @@ import { computed, DestroyRef, InjectionToken, signal, type Provider, type Signa
 import { CONVEX_CLIENT, CONVEX_CONFIG, type WithInjector } from 'ngx-convex';
 import { resolveInjector } from '../injector';
 import { injectConvexAuthContext } from '../provide-convex-auth-client';
-import type { SignInEnvelopeLike } from '../types';
+import { runSignIn } from '../sign-in';
 import { browserCeremonies } from './browser-ceremonies';
 import { resolveCeremonies, type PasskeyCeremonies, type PasskeyClientError, type ResolvedPasskeyCeremonies } from './ceremonies';
 import {
@@ -108,13 +108,8 @@ export function injectSignInWithUsernamePasskey(
           return requestOptions;
         },
         onAssertion: async (response) => {
-          const result = (await signInApi.mutation(
-            api.finishSignInWithUsernamePasskey,
-            { response },
-          )) as SignInEnvelopeLike;
-          if (result.status !== 'complete') return { success: false, userError: result.userError };
-          await client.setSession(result.tokens!);
-          return { success: true };
+          const result = await runSignIn(signInApi, client, api.finishSignInWithUsernamePasskey, { response });
+          return result.status === 'complete' ? { success: true } : { success: false, userError: result.userError };
         },
       })
     : null;

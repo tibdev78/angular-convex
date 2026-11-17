@@ -1,6 +1,9 @@
 import type { AuthClientConfig } from '@convex-dev/auth/browser';
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
+import type { SignInEnvelope } from '@convex-dev/auth';
 import type { QueryReference } from 'ngx-convex';
+
+export type { SignInEnvelope };
 
 /**
  * Ambient sign-in registration, as accepted by `AuthClient`
@@ -38,27 +41,26 @@ export interface ConvexAuthClientApi {
   isAuthenticated: QueryReference;
 }
 
-/** `{ status: 'error', userError: { error: 'OTHER_ERROR', cause } }` — an unexpected failure. */
-export interface SignInUnexpectedFailure {
-  status: 'error';
-  userError: { error: 'OTHER_ERROR'; cause: unknown };
+/** `{ error: 'OTHER_ERROR', cause }`: an unexpected failure (network, server bug). */
+export interface OtherError {
+  error: 'OTHER_ERROR';
+  cause: unknown;
 }
 
-/** `{ success: false, userError: { error: 'OTHER_ERROR', cause } }` — an unexpected failure. */
+/** `{ status: 'error', userError: OtherError }`: an unexpected failure of a sign-in. */
+export interface SignInUnexpectedFailure {
+  status: 'error';
+  userError: OtherError;
+}
+
+/** `{ success: false, userError: OtherError }`: an unexpected failure of another step. */
 export interface UnexpectedFailure {
   success: false;
-  userError: { error: 'OTHER_ERROR'; cause: unknown };
+  userError: OtherError;
 }
 
 /** The `userError` member of an error result, if any. */
 export type UserErrorOf<Result> = Result extends { userError: infer UserError } ? UserError : never;
-
-/** Structural reading of a sign-in envelope. */
-export interface SignInEnvelopeLike {
-  status: 'complete' | 'error';
-  tokens?: AuthSession;
-  userError?: unknown;
-}
 
 /** The namespaced key/value view of the session storage (`NamespacedStorage`). */
 export interface AuthClientStorage {

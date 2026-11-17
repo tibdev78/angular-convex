@@ -3,6 +3,8 @@
  * `base64url.ts` and the wire types of `src/components/passkey/validation.ts`
  * (none of them exported by the package). Apache-2.0 © Convex, Inc.
  */
+import type { OtherError } from '../types';
+import { otherError } from '../sign-in';
 
 interface CredentialDescriptor {
   id: string;
@@ -52,7 +54,7 @@ export type PasskeyClientError =
   | { error: 'CEREMONY_ABORTED' }
   | { error: 'PASSKEY_ALREADY_REGISTERED' }
   | { error: 'WEBAUTHN_UNSUPPORTED' }
-  | { error: 'OTHER_ERROR'; cause: unknown };
+  | OtherError;
 
 export interface PasskeyClientFailure {
   success: false;
@@ -114,7 +116,7 @@ export function foldClientError(cause: unknown): PasskeyClientError {
   if (cause instanceof Error || isDOMException(cause)) {
     if (cause.name === 'NotAllowedError' || cause.name === 'AbortError') return { error: 'CEREMONY_ABORTED' };
   }
-  return { error: 'OTHER_ERROR', cause };
+  return otherError(cause);
 }
 
 export function pruneRegistrationResponse(response: PasskeyRegistrationResponse): WireRegistrationResponse {

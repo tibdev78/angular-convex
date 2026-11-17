@@ -7,7 +7,8 @@
 import type { AuthMutationReference } from '../types';
 import { getFunctionName, makeFunctionReference } from 'convex/server';
 import { retryOnNetworkError } from '../retry';
-import type { AmbientSignInClient, SignInEnvelopeLike } from '../types';
+import type { AmbientSignInClient, OtherError, SignInEnvelope } from '../types';
+import { otherError } from '../sign-in';
 import { OAUTH_CODE_PARAM, OAUTH_ERROR_PARAM } from './oauth-params';
 
 /** The two mutations a provider exports (`startSignInWith…`, `completeSignInWith…`). */
@@ -23,11 +24,11 @@ export type OauthFlowError =
   | { error: 'ACCESS_DENIED' }
   | { error: 'EXPIRED' }
   | { error: 'INVALID_FLOW' }
-  | { error: 'OTHER_ERROR'; cause: unknown };
+  | OtherError;
 
 export type OauthStartResult =
   | { status: 'redirect'; redirect: URL }
-  | { status: 'error'; userError: { error: 'OTHER_ERROR'; cause: unknown } };
+  | { status: 'error'; userError: OtherError };
 
 export type OauthCompleteResult = { status: 'complete' } | { status: 'error'; userError: OauthFlowError };
 
@@ -63,7 +64,7 @@ function callbackFlowError(param: string): OauthFlowError {
     case 'expired':
       return { error: 'EXPIRED' };
     default:
-      return { error: 'OTHER_ERROR', cause: param };
+      return otherError(param);
   }
 }
 
@@ -113,15 +114,15 @@ export function oauth(): AmbientSignInClient {
         const pending = await takePendingFlow(storage);
         if (pending === null) return { status: 'error', userError: { error: 'INVALID_FLOW' } };
         const completeSignIn = makeFunctionReference<'mutation'>(pending.completeSignIn);
-        const result = (await retryOnNetworkError(() =>
+        const result: SignInEnvelope = await retryOnNetworkError(() =>
           signInApi.mutation(completeSignIn, { code, state: pending.state }),
-        )) as SignInEnvelopeLike;
+        );
         // Unknown, already redeemed, expired and mismatched state all land here.
         if (result.status === 'error') return { status: 'error', userError: { error: 'EXPIRED' } };
-        await client.setSession(result.tokens!);
+        await client.setSession(result.tokens);
         return { status: 'complete' };
       } catch (error) {
-        return { status: 'error', userError: { error: 'OTHER_ERROR', cause: error } };
+        return { status: 'error', userError: otherError(error) };
       }
     };
 
@@ -178,7 +179,7 @@ export function oauth(): AmbientSignInClient {
         if (href !== null) window.location.href = url.toString();
         return { status: 'redirect', redirect: url };
       } catch (cause) {
-        return { status: 'error', userError: { error: 'OTHER_ERROR', cause } };
+        return { status: 'error', userError: otherError(cause) };
       }
     };
 

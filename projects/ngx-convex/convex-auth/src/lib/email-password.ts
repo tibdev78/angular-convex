@@ -15,7 +15,8 @@ import {
 import { resolveInjector } from './injector';
 import { createPending, createUserError } from './pending';
 import { injectConvexAuthContext, type ConvexAuthContext } from './provide-convex-auth-client';
-import { authClientStorage, type SignInEnvelopeLike, type SignInUnexpectedFailure, type UnexpectedFailure, type UserErrorOf } from './types';
+import { authClientStorage, type OtherError, type SignInUnexpectedFailure, type UnexpectedFailure, type UserErrorOf } from './types';
+import { otherError, runSignIn } from './sign-in';
 
 type EmailLinkFlow = 'signUp' | 'changeEmail' | 'passwordRecovery';
 
@@ -28,7 +29,6 @@ export const EMAIL_PASSWORD_SECRET_STORAGE_KEYS: Readonly<Record<EmailLinkFlow, 
 
 const PASSWORD_RECOVERY_LINK_ERRORS: Readonly<Record<string, true>> = { INVALID_CHALLENGE: true, INCORRECT_CODE: true };
 
-export type OtherError = { error: 'OTHER_ERROR'; cause: unknown };
 export type MissingSecretError = { error: 'MISSING_SECRET' };
 
 /** The secret is kept by the browser, never handed to the app. */
@@ -52,11 +52,19 @@ interface Tracked<Result> {
   userError: Signal<UserErrorOf<Result> | null>;
 }
 
+/** The link itself is dead (`INVALID_CHALLENGE`, `INCORRECT_CODE`). */
+const isRecoveryLinkError = (userError: unknown): boolean =>
+  typeof userError === 'object' &&
+  userError !== null &&
+  'error' in userError &&
+  typeof userError.error === 'string' &&
+  userError.error in PASSWORD_RECOVERY_LINK_ERRORS;
+
 const readCode = (code: EmailCodeInput): string => (typeof code === 'function' ? code() : code);
-const foldError = (cause: unknown): UnexpectedFailure => ({ success: false, userError: { error: 'OTHER_ERROR', cause } });
+const foldError = (cause: unknown): UnexpectedFailure => ({ success: false, userError: otherError(cause) });
 const foldSignInError = (cause: unknown): SignInUnexpectedFailure => ({
   status: 'error',
-  userError: { error: 'OTHER_ERROR', cause },
+  userError: otherError(cause),
 });
 
 // --- sign in -------------------------------------------------------------------
@@ -79,9 +87,7 @@ export function injectSignInWithEmailPassword<Api extends { signInWithEmailPassw
   const signIn = (credentials: { email: string; password: string }): Promise<Result> =>
     track(async () => {
       try {
-        const result = (await signInApi.mutation(api.signInWithEmailPassword, credentials)) as SignInEnvelopeLike;
-        if (result.status === 'complete') await client.setSession(result.tokens!);
-        return record(result as Result);
+        return record((await runSignIn(signInApi, client, api.signInWithEmailPassword, credentials)) as Result);
       } catch (cause) {
         return record(foldSignInError(cause) as Result);
       }
@@ -210,7 +216,7 @@ function linkFlow<UserError>(
         result.set({ status: 'error', userError: outcome.userError });
       }
     } catch (cause) {
-      result.set({ status: 'error', userError: { error: 'OTHER_ERROR', cause } });
+      result.set({ status: 'error', userError: otherError(cause) });
     }
   };
   effect(
@@ -241,15 +247,13 @@ export function injectCompleteSignUpWithEmailPassword<Api extends { completeSign
   const { client, signInApi } = context;
   return linkFlow(injector, context, 'signUp', (browserSecret) =>
     client.withSignInPending(async () => {
-      const result = (await signInApi.mutation(
-        api.completeSignUpWithEmailPassword,
-        { emailCode: untracked(() => readCode(options.emailCode)), browserSecret },
-      )) as SignInEnvelopeLike;
-      if (result.status === 'complete') {
-        await client.setSession(result.tokens!);
-        return { done: true } as const;
-      }
-      return { done: false, userError: result.userError } as const;
+      const result = await runSignIn(signInApi, client, api.completeSignUpWithEmailPassword, {
+        emailCode: untracked(() => readCode(options.emailCode)),
+        browserSecret,
+      });
+      return result.status === 'complete'
+        ? ({ done: true } as const)
+        : ({ done: false, userError: result.userError } as const);
     }),
   ) as Signal<CompleteSignUpState<Api>>;
 }
@@ -345,15 +349,15 @@ export function injectCompletePasswordRecovery<Api extends PasswordRecoveryApi>(
         throw new Error('completePasswordRecovery was called before the flow was ready');
       }
       try {
-        const result = (await signInApi.mutation(
-          recoveryApi.completePasswordRecovery,
-          { emailCode: readCode(options.emailCode), browserSecret: secret, newPassword },
-        )) as SignInEnvelopeLike & { userError?: { error: string } };
+        const result = await runSignIn(signInApi, client, recoveryApi.completePasswordRecovery, {
+          emailCode: readCode(options.emailCode),
+          browserSecret: secret,
+          newPassword,
+        });
         if (result.status === 'complete') {
-          await client.setSession(result.tokens!);
           await authClientStorage(client).remove(EMAIL_PASSWORD_SECRET_STORAGE_KEYS.passwordRecovery);
           outcome.set({ status: 'complete' });
-        } else if (result.userError && result.userError.error in PASSWORD_RECOVERY_LINK_ERRORS) {
+        } else if (isRecoveryLinkError(result.userError)) {
           // The link itself is dead: retrying with another password cannot help.
           outcome.set({ status: 'error', userError: result.userError as PasswordRecoveryLinkError<Api> });
         }

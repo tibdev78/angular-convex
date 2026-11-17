@@ -7,7 +7,8 @@ import type { Signal } from '@angular/core';
 import type { ReturnOf, WithInjector } from 'ngx-convex';
 import { createPending, createUserError } from './pending';
 import { injectConvexAuthContext } from './provide-convex-auth-client';
-import type { SignInEnvelopeLike, SignInUnexpectedFailure, UserErrorOf } from './types';
+import type { SignInUnexpectedFailure, UserErrorOf } from './types';
+import { otherError, runSignIn } from './sign-in';
 
 export interface UsernamePasswordCredentials {
   username: string;
@@ -57,11 +58,9 @@ function passwordFlow<Result>(mutation: AuthMutationReference, options?: WithInj
   const run = (credentials: UsernamePasswordCredentials): Promise<Result> =>
     track(async () => {
       try {
-        const result = (await signInApi.mutation(mutation, credentials)) as SignInEnvelopeLike;
-        if (result.status === 'complete') await client.setSession(result.tokens!);
-        return record(result as Result);
+        return record((await runSignIn(signInApi, client, mutation, { username: credentials.username, password: credentials.password })) as Result);
       } catch (cause) {
-        return record({ status: 'error', userError: { error: 'OTHER_ERROR', cause } } as Result);
+        return record({ status: 'error', userError: otherError(cause) } as Result);
       }
     });
   return { run, pending, userError };
