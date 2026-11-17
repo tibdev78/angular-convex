@@ -3,8 +3,9 @@
  * (`methods/anonymous/react`, shipped in the package but not exported yet).
  * Apache-2.0 © Convex, Inc.
  */
+import type { AuthMutationReference } from './types';
 import type { Signal } from '@angular/core';
-import type { MutationReference, WithInjector } from 'ngx-convex';
+import type { WithInjector } from 'ngx-convex';
 import { createPending } from './pending';
 import { injectConvexAuthContext } from './provide-convex-auth-client';
 import type { SignInEnvelopeLike } from './types';
@@ -21,14 +22,14 @@ export interface InjectSignInAnonymouslyReturn {
  * `convex/auth.ts`). Every call makes a new account.
  */
 export function injectSignInAnonymously(
-  api: { signInAnonymously: MutationReference },
+  api: { signInAnonymously: AuthMutationReference },
   options?: WithInjector,
 ): InjectSignInAnonymouslyReturn {
   const { client, signInApi } = injectConvexAuthContext(options);
   const { pending, track } = createPending();
   const signIn = () =>
     track(async () => {
-      const result = (await signInApi.mutation(api.signInAnonymously as never, {} as never)) as SignInEnvelopeLike;
+      const result = (await signInApi.mutation(api.signInAnonymously, {})) as SignInEnvelopeLike;
       if (result.status !== 'complete') throw new Error('Anonymous sign-in did not complete.');
       await client.setSession(result.tokens!);
     });

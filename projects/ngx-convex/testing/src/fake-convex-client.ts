@@ -1,6 +1,6 @@
 import { type EnvironmentProviders } from '@angular/core';
 import type { ConnectionState, ConvexClient } from 'convex/browser';
-import { getFunctionName, makeFunctionReference } from 'convex/server';
+import { getFunctionName, makeFunctionReference, type DefaultFunctionArgs, type FunctionReference, type FunctionType } from 'convex/server';
 import { convexToJson, type Value } from 'convex/values';
 import { provideConvex } from 'ngx-convex';
 
@@ -238,15 +238,15 @@ export function provideConvexTesting(fake: FakeConvexClient = new FakeConvexClie
  * Builds a function reference usable with the fake client without generated
  * code, e.g. `const list = fakeQuery<Todo[]>('todos:list')`.
  */
-export function fakeRef<Type extends 'query' | 'mutation' | 'action', Args = Record<string, unknown>, Return = unknown>(
+export function fakeRef<Type extends FunctionType, Args extends DefaultFunctionArgs = DefaultFunctionArgs, Return = unknown>(
   type: Type,
   name: string,
-): { _type: Type; _visibility: 'public'; _args: Args; _returnType: Return; _componentPath: undefined } {
+): FunctionReference<Type, 'public', Args, Return> {
   void type;
-  return makeFunctionReference(name) as never;
+  return makeFunctionReference<Type, Args, Return>(name);
 }
 
 
-export const fakeQuery = <Return = unknown, Args = Record<string, unknown>>(name: string) => fakeRef<'query', Args, Return>('query', name);
-export const fakeMutation = <Return = unknown, Args = Record<string, unknown>>(name: string) => fakeRef<'mutation', Args, Return>('mutation', name);
-export const fakeAction = <Return = unknown, Args = Record<string, unknown>>(name: string) => fakeRef<'action', Args, Return>('action', name);
+export const fakeQuery = <Return = unknown, Args extends DefaultFunctionArgs = DefaultFunctionArgs>(name: string) => fakeRef<'query', Args, Return>('query', name);
+export const fakeMutation = <Return = unknown, Args extends DefaultFunctionArgs = DefaultFunctionArgs>(name: string) => fakeRef<'mutation', Args, Return>('mutation', name);
+export const fakeAction = <Return = unknown, Args extends DefaultFunctionArgs = DefaultFunctionArgs>(name: string) => fakeRef<'action', Args, Return>('action', name);

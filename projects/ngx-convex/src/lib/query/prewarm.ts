@@ -14,7 +14,7 @@ export function prewarmQuery<Query extends QueryReference>(
   options: { extendSubscriptionFor?: number; client?: ConvexClient } = {},
 ): void {
   const client = options.client ?? inject(CONVEX_CLIENT);
-  const unsubscribe = client.onUpdate(query as never, (args ?? {}) as never, () => undefined, () => undefined);
+  const unsubscribe = client.onUpdate(query, (args ?? {}), () => undefined, () => undefined);
   setTimeout(() => unsubscribe(), options.extendSubscriptionFor ?? 5000);
 }
 

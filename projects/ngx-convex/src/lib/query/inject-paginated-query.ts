@@ -8,10 +8,10 @@ import { functionName, sameTarget, targetSource, toError, type Target } from '..
 import { connectReactive } from '../util/reactive';
 
 /** Item type of a paginated query (`PaginationResult<Item>`). */
-export type PaginatedItem<Query> = ReturnOf<Query> extends { page: (infer Item)[] } ? Item : unknown;
+export type PaginatedItem<Query extends QueryReference> = ReturnOf<Query> extends { page: (infer Item)[] } ? Item : unknown;
 
 /** Arguments of a paginated query without `paginationOpts`. */
-export type PaginatedArgs<Query> = Omit<ArgsOf<Query>, 'paginationOpts'>;
+export type PaginatedArgs<Query extends QueryReference> = Omit<ArgsOf<Query>, 'paginationOpts'>;
 
 export interface PaginatedQueryOptions extends WithInjector {
   /** Size of the first page. */
@@ -66,8 +66,8 @@ export function injectPaginatedQuery<Query extends QueryReference>(
       loadMore = page.loadMore;
     };
     const handle = client.onPaginatedUpdate_experimental(
-      query as never,
-      target.args as never,
+      query,
+      target.args,
       { initialNumItems: options.initialNumItems },
       apply,
       (e: Error) => error.set(e),

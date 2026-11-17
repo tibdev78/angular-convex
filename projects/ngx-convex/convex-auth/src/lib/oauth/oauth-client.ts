@@ -4,16 +4,16 @@
  * which imports React; this is the same ambient sign-in without React.
  * Apache-2.0 © Convex, Inc.
  */
+import type { AuthMutationReference } from '../types';
 import { getFunctionName, makeFunctionReference } from 'convex/server';
-import type { MutationReference } from 'ngx-convex';
 import { retryOnNetworkError } from '../retry';
 import type { AmbientSignInClient, SignInEnvelopeLike } from '../types';
 import { OAUTH_CODE_PARAM, OAUTH_ERROR_PARAM } from './oauth-params';
 
 /** The two mutations a provider exports (`startSignInWith…`, `completeSignInWith…`). */
 export interface OauthProviderApi {
-  startSignIn: MutationReference;
-  completeSignIn: MutationReference;
+  startSignIn: AuthMutationReference;
+  completeSignIn: AuthMutationReference;
 }
 
 export type OauthProviderRefs = { providerName: string } & OauthProviderApi;
@@ -114,7 +114,7 @@ export function oauth(): AmbientSignInClient {
         if (pending === null) return { status: 'error', userError: { error: 'INVALID_FLOW' } };
         const completeSignIn = makeFunctionReference<'mutation'>(pending.completeSignIn);
         const result = (await retryOnNetworkError(() =>
-          signInApi.mutation(completeSignIn as never, { code, state: pending.state } as never),
+          signInApi.mutation(completeSignIn, { code, state: pending.state }),
         )) as SignInEnvelopeLike;
         // Unknown, already redeemed, expired and mismatched state all land here.
         if (result.status === 'error') return { status: 'error', userError: { error: 'EXPIRED' } };
@@ -162,7 +162,7 @@ export function oauth(): AmbientSignInClient {
       }
       setFlowError(null);
       try {
-        const { redirect, state } = (await convex.mutation(refs.startSignIn as never, { redirectTo } as never)) as {
+        const { redirect, state } = (await convex.mutation(refs.startSignIn, { redirectTo })) as {
           redirect: string;
           state: string;
         };
@@ -171,7 +171,7 @@ export function oauth(): AmbientSignInClient {
           JSON.stringify({
             providerName: refs.providerName,
             state,
-            completeSignIn: getFunctionName(refs.completeSignIn as never),
+            completeSignIn: getFunctionName(refs.completeSignIn),
           } satisfies PendingFlow),
         );
         const url = new URL(redirect);

@@ -102,15 +102,15 @@ export function injectSignInWithUsernamePasskey(
         ceremonies,
         start: async () => {
           const { options: requestOptions } = (await convex.mutation(
-            api.startAutofillSignInWithUsernamePasskey as never,
-            {} as never,
+            api.startAutofillSignInWithUsernamePasskey,
+            {},
           )) as { options: WireRequestOptions };
           return requestOptions;
         },
         onAssertion: async (response) => {
           const result = (await signInApi.mutation(
-            api.finishSignInWithUsernamePasskey as never,
-            { response } as never,
+            api.finishSignInWithUsernamePasskey,
+            { response },
           )) as SignInEnvelopeLike;
           if (result.status !== 'complete') return { success: false, userError: result.userError };
           await client.setSession(result.tokens!);

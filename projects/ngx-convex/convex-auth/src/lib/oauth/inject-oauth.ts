@@ -1,5 +1,6 @@
+import type { AuthMutationReference } from '../types';
 import { computed, type Signal } from '@angular/core';
-import { type MutationReference, type WithInjector } from 'ngx-convex';
+import { type WithInjector } from 'ngx-convex';
 import { resolveInjector } from '../injector';
 import { injectAmbientSignInValue } from '../ambient-value';
 import {
@@ -52,7 +53,7 @@ export function injectOauthSignIn(refs: OauthProviderRefs, options?: WithInjecto
 
 /** `injectSignInWithGithub(api.github)`, from `methods/github/server`. */
 export function injectSignInWithGithub(
-  api: { startSignInWithGithub: MutationReference; completeSignInWithGithub: MutationReference },
+  api: { startSignInWithGithub: AuthMutationReference; completeSignInWithGithub: AuthMutationReference },
   options?: WithInjector,
 ): InjectOauthSignInReturn {
   return injectOauthSignIn(
@@ -63,7 +64,7 @@ export function injectSignInWithGithub(
 
 /** `injectSignInWithGoogle(api.google)`, from `methods/google/server`. */
 export function injectSignInWithGoogle(
-  api: { startSignInWithGoogle: MutationReference; completeSignInWithGoogle: MutationReference },
+  api: { startSignInWithGoogle: AuthMutationReference; completeSignInWithGoogle: AuthMutationReference },
   options?: WithInjector,
 ): InjectOauthSignInReturn {
   return injectOauthSignIn(
@@ -74,7 +75,7 @@ export function injectSignInWithGoogle(
 
 /** `injectSignInWithApple(api.apple)`, from `methods/apple/server`. */
 export function injectSignInWithApple(
-  api: { startSignInWithApple: MutationReference; completeSignInWithApple: MutationReference },
+  api: { startSignInWithApple: AuthMutationReference; completeSignInWithApple: AuthMutationReference },
   options?: WithInjector,
 ): InjectOauthSignInReturn {
   return injectOauthSignIn(

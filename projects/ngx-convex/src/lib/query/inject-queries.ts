@@ -57,7 +57,7 @@ export function injectQueries<R extends Record<string, QueryRequest>>(
       const set = (value: unknown) => {
         if (live.get(key)?.target.key === target.key) values.update((v) => ({ ...v, [key]: value }));
       };
-      const handle = client.onUpdate(req.query as never, target.args as never, set, (e: Error) => set(e));
+      const handle = client.onUpdate(req.query, target.args, set, (e: Error) => set(e));
       live.set(key, { target, unsubscribe: () => handle() });
       try {
         const cached = handle.getCurrentValue();

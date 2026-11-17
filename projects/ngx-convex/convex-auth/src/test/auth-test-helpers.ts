@@ -1,3 +1,4 @@
+import type { FunctionReference } from 'convex/server';
 import { ApplicationRef, EnvironmentInjector, type EnvironmentProviders, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { InMemoryStorage, type TokenStorage } from '@convex-dev/auth/browser';
@@ -30,8 +31,8 @@ export function fakeHttp(refresh: () => unknown = () => null) {
   const calls: { name: string; args: Record<string, unknown> }[] = [];
   return {
     calls,
-    mutation: vi.fn(async (fn: unknown, args: Record<string, unknown>) => {
-      const name = getFunctionName(fn as never);
+    mutation: vi.fn(async (fn: FunctionReference<'mutation'>, args: Record<string, unknown>) => {
+      const name = getFunctionName(fn);
       calls.push({ name, args });
       return name === 'auth:refreshSession' ? refresh() : null;
     }),

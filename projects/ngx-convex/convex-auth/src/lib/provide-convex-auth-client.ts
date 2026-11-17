@@ -24,7 +24,7 @@ import {
 } from 'ngx-convex';
 import { resolveInjector } from './injector';
 import { oauth } from './oauth/oauth-client';
-import type { AmbientSignInClient, AuthSession, AuthSignInApi, ConvexAuthClientApi } from './types';
+import type { AmbientSignInClient, AuthSession, AuthSignInApi, ConvexAuthClientApi, ConvexMutationApi } from './types';
 
 export interface ConvexAuthClientOptions {
   /** `api.auth` — the functions exported by `convex/auth.ts`. */
@@ -42,9 +42,7 @@ export interface ConvexAuthClientOptions {
 }
 
 /** One-shot HTTP calls used by `refreshSession` and `signOut` (never authenticated). */
-export interface ConvexAuthHttpClient {
-  mutation(fn: never, args: never): Promise<unknown>;
-}
+export type ConvexAuthHttpClient = ConvexMutationApi;
 
 /**
  * HTTP client for the token refresh and sign-out. Separate from the WebSocket
@@ -82,7 +80,7 @@ export function provideConvexAuthClient(options: ConvexAuthClientOptions): Envir
   return makeEnvironmentProviders([
     {
       provide: CONVEX_AUTH_HTTP_CLIENT,
-      useFactory: (): ConvexAuthHttpClient => new ConvexHttpClient(inject(CONVEX_CONFIG).url) as never,
+      useFactory: (): ConvexAuthHttpClient => new ConvexHttpClient(inject(CONVEX_CONFIG).url),
     },
     { provide: CONVEX_AUTH_CONTEXT, useFactory: () => createContext(options) },
     provideConvexAuth(() => {
@@ -104,15 +102,15 @@ function createContext(options: ConvexAuthClientOptions): ConvexAuthContext {
   const { api } = options;
 
   const signInApi: AuthSignInApi = {
-    mutation: (fn, args) => convex.mutation(fn, args) as never,
-    action: (fn, args) => convex.action(fn, args) as never,
+    mutation: (fn, args) => convex.mutation(fn, args),
+    action: (fn, args) => convex.action(fn, args),
   };
   const client = new AuthClient({
     mode: 'spa',
     authApi: {
-      refreshSession: (refreshToken) => http.mutation(api.refreshSession as never, { refreshToken } as never) as never,
+      refreshSession: (refreshToken) => http.mutation(api.refreshSession, { refreshToken }),
       signOut: async (refreshToken) => {
-        await http.mutation(api.signOut as never, { refreshToken } as never);
+        await http.mutation(api.signOut, { refreshToken });
       },
     },
     // On the server there is no session to restore and localStorage is absent.
@@ -122,7 +120,7 @@ function createContext(options: ConvexAuthClientOptions): ConvexAuthContext {
     ambientSignIns: {
       signIns: options.ambientSignIns ?? [oauth()],
       signInApi,
-      convex: { mutation: (fn, args) => convex.mutation(fn, args) as never },
+      convex: { mutation: (fn, args) => convex.mutation(fn, args) },
       replaceUrl: options.replaceUrl,
     },
   });

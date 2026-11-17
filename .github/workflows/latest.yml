@@ -24,6 +24,7 @@ jobs:
       - run: npm ls convex @convex-dev/auth
       - run: npm run build:lib
       - run: npm run test:lib
+      - run: npm run typecheck:lib
       - run: cd dist/ngx-convex && npm pack --pack-destination ../../compat
       - uses: actions/upload-artifact@v4
         with: { name: tarball, path: compat/ngx-convex-*.tgz }

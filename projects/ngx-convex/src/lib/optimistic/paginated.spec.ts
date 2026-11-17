@@ -1,5 +1,5 @@
 import type { OptimisticLocalStore } from 'convex/browser';
-import { getFunctionName } from 'convex/server';
+import { getFunctionName, type FunctionReference } from 'convex/server';
 import { insertAtBottomIfLoaded, insertAtPosition, insertAtTop, optimisticallyUpdateValueInPaginatedQuery } from './paginated';
 import { pageTodos, type Todo } from '../../test/refs';
 
@@ -12,7 +12,7 @@ function store(entries: Entry[]) {
   });
   const s = {
     getQuery: () => undefined,
-    getAllQueries: (q: unknown) => (getFunctionName(q as never) === 'todos:page' ? entries : []),
+    getAllQueries: (q: FunctionReference<'query'>) => (getFunctionName(q) === 'todos:page' ? entries : []),
     setQuery: set,
   } as unknown as OptimisticLocalStore;
   return { s, set, entries };

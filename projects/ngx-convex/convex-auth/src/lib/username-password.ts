@@ -2,8 +2,9 @@
  * Angular port of @convex-dev/auth 2.0.0 `src/methods/username-password/react.tsx`.
  * Apache-2.0 © Convex, Inc.
  */
+import type { AuthMutationReference } from './types';
 import type { Signal } from '@angular/core';
-import type { MutationReference, ReturnOf, WithInjector } from 'ngx-convex';
+import type { ReturnOf, WithInjector } from 'ngx-convex';
 import { createPending, createUserError } from './pending';
 import { injectConvexAuthContext } from './provide-convex-auth-client';
 import type { SignInEnvelopeLike, SignInUnexpectedFailure, UserErrorOf } from './types';
@@ -19,16 +20,16 @@ export interface PasswordFlow<Result> {
   userError: Signal<UserErrorOf<Result> | null>;
 }
 
-export type SignInWithUsernamePasswordResult<Api extends { signInWithUsernamePassword: MutationReference }> =
+export type SignInWithUsernamePasswordResult<Api extends { signInWithUsernamePassword: AuthMutationReference }> =
   | ReturnOf<Api['signInWithUsernamePassword']>
   | SignInUnexpectedFailure;
 
-export type SignUpWithUsernamePasswordResult<Api extends { signUpWithUsernamePassword: MutationReference }> =
+export type SignUpWithUsernamePasswordResult<Api extends { signUpWithUsernamePassword: AuthMutationReference }> =
   | ReturnOf<Api['signUpWithUsernamePassword']>
   | SignInUnexpectedFailure;
 
 /** React `useSignInWithUsernamePassword`. */
-export function injectSignInWithUsernamePassword<Api extends { signInWithUsernamePassword: MutationReference }>(
+export function injectSignInWithUsernamePassword<Api extends { signInWithUsernamePassword: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): PasswordFlow<SignInWithUsernamePasswordResult<Api>> & {
@@ -39,7 +40,7 @@ export function injectSignInWithUsernamePassword<Api extends { signInWithUsernam
 }
 
 /** React `useSignUpWithUsernamePassword`. */
-export function injectSignUpWithUsernamePassword<Api extends { signUpWithUsernamePassword: MutationReference }>(
+export function injectSignUpWithUsernamePassword<Api extends { signUpWithUsernamePassword: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): PasswordFlow<SignUpWithUsernamePasswordResult<Api>> & {
@@ -49,14 +50,14 @@ export function injectSignUpWithUsernamePassword<Api extends { signUpWithUsernam
   return { signUp: flow.run, pending: flow.pending, userError: flow.userError };
 }
 
-function passwordFlow<Result>(mutation: MutationReference, options?: WithInjector) {
+function passwordFlow<Result>(mutation: AuthMutationReference, options?: WithInjector) {
   const { client, signInApi } = injectConvexAuthContext(options);
   const { pending, track } = createPending();
   const { userError, record } = createUserError<UserErrorOf<Result>>();
   const run = (credentials: UsernamePasswordCredentials): Promise<Result> =>
     track(async () => {
       try {
-        const result = (await signInApi.mutation(mutation as never, credentials as never)) as SignInEnvelopeLike;
+        const result = (await signInApi.mutation(mutation, credentials)) as SignInEnvelopeLike;
         if (result.status === 'complete') await client.setSession(result.tokens!);
         return record(result as Result);
       } catch (cause) {

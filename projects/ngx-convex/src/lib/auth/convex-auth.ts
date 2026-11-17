@@ -129,7 +129,7 @@ export class ConvexAuthService {
           if (generation === this.generation) this.refreshing.set(r);
         };
         if (inner?.setAuth) inner.setAuth(this.provider.fetchAccessToken, onChange, onRefresh);
-        else this.client.setAuth(this.provider.fetchAccessToken as never, onChange);
+        else this.client.setAuth(this.provider.fetchAccessToken, onChange);
       } else {
         inner?.clearAuth();
         this.convexAuthenticated.set(this.provider.isLoading() ? null : false);

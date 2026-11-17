@@ -17,7 +17,7 @@ export function injectAction<Ref extends ActionReference>(
   const injector = resolveInjector(options.injector);
   const client = injector.get(CONVEX_CLIENT);
   const call = createCall<ArgsOf<Ref>, ReturnOf<Ref>>(options, (args) =>
-    client.action(action as never, args as never),
+    client.action(action, args),
   );
   return Object.assign(call.invoke, { ...call.state, run: call.invoke }) as unknown as ConvexAction<Ref>;
 }

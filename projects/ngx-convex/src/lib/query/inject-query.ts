@@ -11,6 +11,8 @@ import { CONVEX_CLIENT, CONVEX_CONFIG } from '../core/config';
 import { CONVEX_HTTP_CLIENT } from '../core/provide-convex';
 import type {
   ArgsInput,
+  ArgsOf,
+  EmptyArgs,
   QueryReference,
   ReturnOf,
   WithInjector,
@@ -82,12 +84,10 @@ export function injectQuery<Query extends QueryReference>(
   return createQuery(injector, query, args ?? {}, options);
 }
 
-/** `args` is optional for functions without arguments. */
-export type QueryRest<Query extends QueryReference> = keyof ArgsInputObject<Query> extends never
+/** `args` is optional for functions without arguments (see {@link OptionalArgs}). */
+export type QueryRest<Query extends QueryReference> = ArgsOf<Query> extends EmptyArgs
   ? [args?: ArgsInput<Query>, options?: QueryOptions<ReturnOf<Query>>]
   : [args: ArgsInput<Query>, options?: QueryOptions<ReturnOf<Query>>];
-
-type ArgsInputObject<Query> = Exclude<ArgsInput<Query>, string | ((...a: never[]) => unknown)>;
 
 function createQuery<T>(
   injector: Injector,
@@ -149,8 +149,8 @@ function subscribe<T>(
   currentData: () => T | undefined,
 ): () => void {
   const unsubscribe = client.onUpdate(
-    query as never,
-    target.args as never,
+    query,
+    target.args,
     (value: unknown) => set({ status: 'success', data: value as T, error: undefined }),
     (error: Error) => set({ status: 'error', data: currentData(), error }),
   );
@@ -181,7 +181,7 @@ function serverPrefetch<T>(
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`SSR prefetch timed out after ${config.ssr.timeoutMs}ms`)), config.ssr.timeoutMs),
   );
-  Promise.race([http.query(query as never, target.args as never), timeout])
+  Promise.race([http.query(query, target.args), timeout])
     .then((value) => {
       if (cancelled) return;
       state.set({ status: 'success', data: value as T, error: undefined });

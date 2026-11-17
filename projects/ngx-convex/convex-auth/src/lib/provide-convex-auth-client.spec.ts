@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { InMemoryStorage } from '@convex-dev/auth/browser';
+import { makeFunctionReference } from 'convex/server';
 import { injectConvexAuth } from 'ngx-convex';
 import { authApi, authSetup, fakeHttp, flush, run, tokens } from '../test/auth-test-helpers';
 import {
@@ -87,9 +88,10 @@ describe('provideConvexAuthClient', () => {
 
   it('runs sign-in functions over the WebSocket client', async () => {
     const { convex } = authSetup();
-    convex.onMutation(authApi.signOut, (args) => ({ echoed: args }));
+    const signIn = makeFunctionReference<'mutation'>('auth:signIn');
+    convex.onMutation(signIn, (args) => ({ echoed: args }));
     const signInApi = run(() => injectAuthSignInApi());
-    await expect(signInApi.mutation(authApi.signOut as never, { a: 1 } as never)).resolves.toEqual({ echoed: { a: 1 } });
+    await expect(signInApi.mutation(signIn, { a: 1 })).resolves.toEqual({ echoed: { a: 1 } });
   });
 
   it('exposes the AuthClient and the shared context', () => {

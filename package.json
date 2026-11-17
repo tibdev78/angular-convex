@@ -9,6 +9,7 @@
     "test": "ng test",
     "build:lib": "ng build ngx-convex",
     "test:lib": "ng test ngx-convex --watch=false",
+    "typecheck:lib": "tsc -p projects/ngx-convex/tsconfig.spec.json --noEmit",
     "e2e": "playwright test",
     "compat": "compat/run.sh",
     "compat:e2e": "playwright test -c compat/playwright.config.ts"

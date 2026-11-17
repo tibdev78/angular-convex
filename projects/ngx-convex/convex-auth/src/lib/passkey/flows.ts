@@ -2,7 +2,7 @@
  * Ported from @convex-dev/auth 2.0.0 `src/methods/username-passkey/flows.ts`
  * and `management/flows.ts`. Apache-2.0 © Convex, Inc.
  */
-import type { MutationReference } from 'ngx-convex';
+import type { AuthMutationReference, ConvexMutationApi } from '../types';
 import type { AuthSession, AuthSignInApi, SignInEnvelopeLike } from '../types';
 import type {
   PasskeyClientFailure,
@@ -13,27 +13,25 @@ import type {
 
 /** `api.passkey` from `methods/username-passkey/server`. */
 export interface UsernamePasskeyApi {
-  startSignInWithUsernamePasskey: MutationReference;
-  startAutofillSignInWithUsernamePasskey: MutationReference;
-  finishSignInWithUsernamePasskey: MutationReference;
-  finishSignUpWithUsernamePasskey: MutationReference;
+  startSignInWithUsernamePasskey: AuthMutationReference;
+  startAutofillSignInWithUsernamePasskey: AuthMutationReference;
+  finishSignInWithUsernamePasskey: AuthMutationReference;
+  finishSignUpWithUsernamePasskey: AuthMutationReference;
 }
 
 export interface AddPasskeyApi {
-  startAddPasskey: MutationReference;
-  verifyAddPasskey: MutationReference;
-  finishAddPasskey: MutationReference;
+  startAddPasskey: AuthMutationReference;
+  verifyAddPasskey: AuthMutationReference;
+  finishAddPasskey: AuthMutationReference;
 }
 
 export interface RemovePasskeyApi {
-  startRemovePasskey: MutationReference;
-  finishRemovePasskey: MutationReference;
+  startRemovePasskey: AuthMutationReference;
+  finishRemovePasskey: AuthMutationReference;
 }
 
 /** Plain mutations (WebSocket client). */
-export interface PasskeyMutationApi {
-  mutation(fn: never, args: never): Promise<unknown>;
-}
+export type PasskeyMutationApi = ConvexMutationApi;
 
 export interface SignInFlowContext {
   convex: PasskeyMutationApi;
@@ -53,8 +51,9 @@ export type SignInFlowResult =
   | (SignInEnvelopeLike & { status: 'complete'; flow: 'signUp' | 'signIn' })
   | { status: 'error'; userError: { error: string; cause?: unknown } };
 
-const call = <T>(client: PasskeyMutationApi | AuthSignInApi, fn: MutationReference, args: unknown): Promise<T> =>
-  client.mutation(fn as never, args as never) as Promise<T>;
+/** Sign-in functions run on `signInApi`, the others on `convex`: same call shape. */
+const call = <T>(client: ConvexMutationApi, fn: AuthMutationReference, args: Record<string, unknown>): Promise<T> =>
+  client.mutation(fn, args);
 
 /** Registers a new account or signs in to an existing one, by username. */
 export async function runSignInOrSignUpFlow(

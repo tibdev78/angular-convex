@@ -29,6 +29,9 @@ jobs:
       - run: npm ci
       - run: npm run build:lib
       - run: npm run test:lib
+      # The unit-test builder compiles without type checking: this checks the
+      # specs, including the type-level contract of the public API.
+      - run: npm run typecheck:lib
       # The compat jobs install this tarball: the local build, or the
       # published package when `published` is set.
       - name: Pack the library

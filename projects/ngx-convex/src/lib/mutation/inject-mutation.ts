@@ -58,7 +58,7 @@ export function injectMutation<Ref extends MutationReference>(
   const injector = resolveInjector(options.injector);
   const client = injector.get(CONVEX_CLIENT);
   return buildMutation(mutation, options, (args, optimisticUpdate) =>
-    client.mutation(mutation as never, args as never, optimisticUpdate ? { optimisticUpdate: optimisticUpdate as never } : undefined),
+    client.mutation(mutation, args, optimisticUpdate ? { optimisticUpdate: optimisticUpdate } : undefined),
   );
 }
 

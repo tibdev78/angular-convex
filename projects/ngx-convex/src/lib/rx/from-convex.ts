@@ -13,8 +13,8 @@ export function fromConvexQuery<Query extends QueryReference>(
 ): Observable<ReturnOf<Query>> {
   return new Observable<ReturnOf<Query>>((subscriber) => {
     const unsubscribe = client.onUpdate(
-      query as never,
-      (args ?? {}) as never,
+      query,
+      (args ?? {}),
       (value: unknown) => subscriber.next(value as ReturnOf<Query>),
       (error: Error) => subscriber.error(error),
     );

@@ -38,7 +38,7 @@ export function injectFileUpload(
     progress.set(0);
     error.set(undefined);
     try {
-      const url = (await client.mutation(generateUploadUrl as never, {} as never)) as string;
+      const url = (await client.mutation(generateUploadUrl, {})) as string;
       const id = await postFile(url, file, (p) => progress.set(p), opts.signal);
       storageId.set(id);
       progress.set(1);

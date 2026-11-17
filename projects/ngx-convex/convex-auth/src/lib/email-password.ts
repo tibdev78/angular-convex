@@ -3,11 +3,11 @@
  * (browser secrets, sign-up / sign-in / e-mail change / password recovery flows).
  * Apache-2.0 © Convex, Inc.
  */
+import type { AuthMutationReference } from './types';
 import { computed, effect, signal, untracked, type Injector, type Signal } from '@angular/core';
 import {
   CONVEX_CLIENT,
   injectQuery,
-  type MutationReference,
   type QueryReference,
   type ReturnOf,
   type WithInjector,
@@ -61,12 +61,12 @@ const foldSignInError = (cause: unknown): SignInUnexpectedFailure => ({
 
 // --- sign in -------------------------------------------------------------------
 
-export type SignInWithEmailPasswordResult<Api extends { signInWithEmailPassword: MutationReference }> =
+export type SignInWithEmailPasswordResult<Api extends { signInWithEmailPassword: AuthMutationReference }> =
   | ReturnOf<Api['signInWithEmailPassword']>
   | SignInUnexpectedFailure;
 
 /** React `useSignInWithEmailPassword`. */
-export function injectSignInWithEmailPassword<Api extends { signInWithEmailPassword: MutationReference }>(
+export function injectSignInWithEmailPassword<Api extends { signInWithEmailPassword: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): Tracked<SignInWithEmailPasswordResult<Api>> & {
@@ -79,7 +79,7 @@ export function injectSignInWithEmailPassword<Api extends { signInWithEmailPassw
   const signIn = (credentials: { email: string; password: string }): Promise<Result> =>
     track(async () => {
       try {
-        const result = (await signInApi.mutation(api.signInWithEmailPassword as never, credentials as never)) as SignInEnvelopeLike;
+        const result = (await signInApi.mutation(api.signInWithEmailPassword, credentials)) as SignInEnvelopeLike;
         if (result.status === 'complete') await client.setSession(result.tokens!);
         return record(result as Result);
       } catch (cause) {
@@ -94,7 +94,7 @@ export function injectSignInWithEmailPassword<Api extends { signInWithEmailPassw
 /** Runs `mutation`; on success keeps `browserSecret` and returns the rest. */
 function secretStartingFlow<Args, Result>(
   options: WithInjector | undefined,
-  mutation: MutationReference,
+  mutation: AuthMutationReference,
   flow: EmailLinkFlow,
 ): Tracked<Result> & { run: (args: Args) => Promise<Result> } {
   const injector = resolveInjector(options?.injector);
@@ -105,7 +105,7 @@ function secretStartingFlow<Args, Result>(
   const run = (args: Args): Promise<Result> =>
     track(async () => {
       try {
-        const result = (await convex.mutation(mutation as never, args as never)) as {
+        const result = (await convex.mutation(mutation, args)) as {
           success: boolean;
           browserSecret?: string;
         };
@@ -122,12 +122,12 @@ function secretStartingFlow<Args, Result>(
   return { run, pending, userError };
 }
 
-export type SignUpWithEmailPasswordResult<Api extends { signUpWithEmailPassword: MutationReference }> =
+export type SignUpWithEmailPasswordResult<Api extends { signUpWithEmailPassword: AuthMutationReference }> =
   | WithoutSecret<ReturnOf<Api['signUpWithEmailPassword']>>
   | UnexpectedFailure;
 
 /** React `useSignUpWithEmailPassword`: sends the confirmation e-mail. */
-export function injectSignUpWithEmailPassword<Api extends { signUpWithEmailPassword: MutationReference }>(
+export function injectSignUpWithEmailPassword<Api extends { signUpWithEmailPassword: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): Tracked<SignUpWithEmailPasswordResult<Api>> & {
@@ -141,12 +141,12 @@ export function injectSignUpWithEmailPassword<Api extends { signUpWithEmailPassw
   return { signUp: run, pending, userError };
 }
 
-export type StartPasswordRecoveryResult<Api extends { startPasswordRecovery: MutationReference }> =
+export type StartPasswordRecoveryResult<Api extends { startPasswordRecovery: AuthMutationReference }> =
   | WithoutSecret<ReturnOf<Api['startPasswordRecovery']>>
   | UnexpectedFailure;
 
 /** React `useStartPasswordRecovery`: sends the recovery e-mail. */
-export function injectStartPasswordRecovery<Api extends { startPasswordRecovery: MutationReference }>(
+export function injectStartPasswordRecovery<Api extends { startPasswordRecovery: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): Tracked<StartPasswordRecoveryResult<Api>> & {
@@ -160,12 +160,12 @@ export function injectStartPasswordRecovery<Api extends { startPasswordRecovery:
   return { startPasswordRecovery: run, pending, userError };
 }
 
-export type StartChangeEmailResult<Api extends { startChangeEmail: MutationReference }> =
+export type StartChangeEmailResult<Api extends { startChangeEmail: AuthMutationReference }> =
   | WithoutSecret<ReturnOf<Api['startChangeEmail']>>
   | UnexpectedFailure;
 
 /** React `useStartChangeEmail`: sends the confirmation to the new address. */
-export function injectStartChangeEmail<Api extends { startChangeEmail: MutationReference }>(
+export function injectStartChangeEmail<Api extends { startChangeEmail: AuthMutationReference }>(
   api: Api,
   options?: WithInjector,
 ): Tracked<StartChangeEmailResult<Api>> & {
@@ -224,7 +224,7 @@ function linkFlow<UserError>(
   return result.asReadonly();
 }
 
-export type CompleteSignUpState<Api extends { completeSignUpWithEmailPassword: MutationReference }> = LinkFlowState<
+export type CompleteSignUpState<Api extends { completeSignUpWithEmailPassword: AuthMutationReference }> = LinkFlowState<
   UserErrorOf<Extract<ReturnOf<Api['completeSignUpWithEmailPassword']>, { status: 'error' }>> | MissingSecretError | OtherError
 >;
 
@@ -232,7 +232,7 @@ export type CompleteSignUpState<Api extends { completeSignUpWithEmailPassword: M
  * React `useCompleteSignUpWithEmailPassword`: confirms the address from the
  * link and signs in. Starts once the stored session has been restored.
  */
-export function injectCompleteSignUpWithEmailPassword<Api extends { completeSignUpWithEmailPassword: MutationReference }>(
+export function injectCompleteSignUpWithEmailPassword<Api extends { completeSignUpWithEmailPassword: AuthMutationReference }>(
   api: Api,
   options: EmailCodeOptions,
 ): Signal<CompleteSignUpState<Api>> {
@@ -242,8 +242,8 @@ export function injectCompleteSignUpWithEmailPassword<Api extends { completeSign
   return linkFlow(injector, context, 'signUp', (browserSecret) =>
     client.withSignInPending(async () => {
       const result = (await signInApi.mutation(
-        api.completeSignUpWithEmailPassword as never,
-        { emailCode: untracked(() => readCode(options.emailCode)), browserSecret } as never,
+        api.completeSignUpWithEmailPassword,
+        { emailCode: untracked(() => readCode(options.emailCode)), browserSecret },
       )) as SignInEnvelopeLike;
       if (result.status === 'complete') {
         await client.setSession(result.tokens!);
@@ -254,12 +254,12 @@ export function injectCompleteSignUpWithEmailPassword<Api extends { completeSign
   ) as Signal<CompleteSignUpState<Api>>;
 }
 
-export type CompleteChangeEmailState<Api extends { completeChangeEmail: MutationReference }> = LinkFlowState<
+export type CompleteChangeEmailState<Api extends { completeChangeEmail: AuthMutationReference }> = LinkFlowState<
   UserErrorOf<Extract<ReturnOf<Api['completeChangeEmail']>, { success: false }>> | MissingSecretError | OtherError
 >;
 
 /** React `useCompleteChangeEmail`: confirms the new address from the link. */
-export function injectCompleteChangeEmail<Api extends { completeChangeEmail: MutationReference }>(
+export function injectCompleteChangeEmail<Api extends { completeChangeEmail: AuthMutationReference }>(
   api: Api,
   options: EmailCodeOptions,
 ): Signal<CompleteChangeEmailState<Api>> {
@@ -268,8 +268,8 @@ export function injectCompleteChangeEmail<Api extends { completeChangeEmail: Mut
   const convex = injector.get(CONVEX_CLIENT);
   return linkFlow(injector, context, 'changeEmail', async (browserSecret) => {
     const result = (await convex.mutation(
-      api.completeChangeEmail as never,
-      { emailCode: untracked(() => readCode(options.emailCode)), browserSecret } as never,
+      api.completeChangeEmail,
+      { emailCode: untracked(() => readCode(options.emailCode)), browserSecret },
     )) as { success: boolean; userError?: unknown };
     if (result.success) return { done: true } as const;
     return { done: false, userError: result.userError } as const;
@@ -278,7 +278,7 @@ export function injectCompleteChangeEmail<Api extends { completeChangeEmail: Mut
 
 export interface PasswordRecoveryApi {
   checkPasswordRecovery: QueryReference;
-  completePasswordRecovery: MutationReference;
+  completePasswordRecovery: AuthMutationReference;
 }
 
 export type CompletePasswordRecoveryResult<Api extends PasswordRecoveryApi> =
@@ -346,8 +346,8 @@ export function injectCompletePasswordRecovery<Api extends PasswordRecoveryApi>(
       }
       try {
         const result = (await signInApi.mutation(
-          recoveryApi.completePasswordRecovery as never,
-          { emailCode: readCode(options.emailCode), browserSecret: secret, newPassword } as never,
+          recoveryApi.completePasswordRecovery,
+          { emailCode: readCode(options.emailCode), browserSecret: secret, newPassword },
         )) as SignInEnvelopeLike & { userError?: { error: string } };
         if (result.status === 'complete') {
           await client.setSession(result.tokens!);

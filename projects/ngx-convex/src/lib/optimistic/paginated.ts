@@ -19,11 +19,11 @@ interface PageQuery<Item> {
 }
 
 function pages<Item>(store: OptimisticLocalStore, query: QueryReference): PageQuery<Item>[] {
-  return store.getAllQueries(query as never) as unknown as PageQuery<Item>[];
+  return store.getAllQueries(query) as unknown as PageQuery<Item>[];
 }
 
 function setPage<Item>(store: OptimisticLocalStore, query: QueryReference, args: PageQuery<Item>['args'], value: PageValue<Item>): void {
-  store.setQuery(query as never, args as never, value as never);
+  store.setQuery(query, args, value);
 }
 
 function matches(argsToMatch: Record<string, unknown> | undefined, args: Record<string, Value>): boolean {
