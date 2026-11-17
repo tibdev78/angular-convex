@@ -1,7 +1,7 @@
 import { getFunctionName } from 'convex/server';
 import type { Source } from './reactive';
 import { convexToJson, type Value } from 'convex/values';
-import { skipToken, type SkipToken } from '../core/types';
+import { skipToken } from '../core/types';
 
 /** A normalized subscription target, compared by `key`. */
 export interface Target {
@@ -15,7 +15,7 @@ export function functionName(ref: unknown): string {
   return getFunctionName(ref as Parameters<typeof getFunctionName>[0]);
 }
 
-export function argsKey(name: string, args: Record<string, Value>): string {
+function argsKey(name: string, args: Record<string, Value>): string {
   return `${name}:${JSON.stringify(convexToJson(args))}`;
 }
 
@@ -25,10 +25,6 @@ export function toTarget(name: string, raw: unknown): Target {
   }
   const args = (raw ?? {}) as Record<string, Value>;
   return { skip: false, args, key: argsKey(name, args) };
-}
-
-export function isSkip(raw: unknown): raw is SkipToken {
-  return raw === skipToken;
 }
 
 export function sameTarget(a: Target, b: Target): boolean {

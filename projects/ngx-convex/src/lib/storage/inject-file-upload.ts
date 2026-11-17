@@ -63,7 +63,7 @@ export function injectFileUpload(
 }
 
 /** POSTs a file to a Convex upload URL. Uses XHR for progress events. */
-export function postFile(
+function postFile(
   url: string,
   file: Blob,
   onProgress: (fraction: number) => void = () => undefined,

@@ -5,15 +5,11 @@ import { authSetup, complete, flush, run } from '../test/auth-test-helpers';
 import { injectAuthClient, injectAuthToken } from './provide-convex-auth-client';
 import { authClientStorage } from './types';
 import { injectSignInWithUsernamePassword, injectSignUpWithUsernamePassword } from './username-password';
-import {
-  EMAIL_PASSWORD_SECRET_STORAGE_KEYS,
-  injectCompleteChangeEmail,
-  injectCompletePasswordRecovery,
-  injectCompleteSignUpWithEmailPassword,
-  injectSignInWithEmailPassword,
-  injectSignUpWithEmailPassword,
-  injectStartPasswordRecovery,
-} from './email-password';
+import { EMAIL_PASSWORD_SECRET_STORAGE_KEYS } from './email-password/shared';
+import { injectSignInWithEmailPassword } from './email-password/sign-in';
+import { injectSignUpWithEmailPassword, injectStartPasswordRecovery } from './email-password/start-flows';
+import { injectCompleteChangeEmail, injectCompleteSignUpWithEmailPassword } from './email-password/confirm-links';
+import { injectCompletePasswordRecovery } from './email-password/password-recovery';
 
 const api = {
   signInWithUsernamePassword: fakeMutation('auth:signInWithUsernamePassword'),

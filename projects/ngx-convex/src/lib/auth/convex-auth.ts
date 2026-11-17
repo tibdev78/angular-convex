@@ -44,7 +44,7 @@ export interface ConvexAuthState {
 }
 
 /** The identity provider adapter registered by {@link provideConvexAuth}. */
-export const CONVEX_AUTH_PROVIDER = new InjectionToken<ConvexAuthProvider>('ngx-convex: auth provider');
+const CONVEX_AUTH_PROVIDER = new InjectionToken<ConvexAuthProvider>('ngx-convex: auth provider');
 
 /**
  * Connects an identity provider to Convex. The factory runs in an injection

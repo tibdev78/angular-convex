@@ -198,7 +198,7 @@ function serverPrefetch<T>(
 }
 
 /** Exposes a state signal as the public `ConvexQuery` shape. */
-export function toConvexQuery<T>(state: Signal<QueryState<T>>, throwOnError = false): ConvexQuery<T> {
+function toConvexQuery<T>(state: Signal<QueryState<T>>, throwOnError = false): ConvexQuery<T> {
   const data = computed(() => {
     const { status, data, error } = state();
     if (throwOnError && status === 'error') throw error;

@@ -1,6 +1,6 @@
 {
   "name": "ngx-convex",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Angular bindings for Convex: signal-based live queries, mutations, actions, pagination, file storage and the Convex Auth 2.0 client.",
   "keywords": [
     "angular",
