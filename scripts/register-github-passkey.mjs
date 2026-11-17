@@ -13,7 +13,7 @@
 import { execFileSync } from 'node:child_process';
 import { chromium } from '@playwright/test';
 
-const repo = process.env.GH_REPO ?? 'tibdev78/angular-convex';
+const repo = process.env.GH_REPO ?? 'tibdev78/ngx-convex';
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL ?? 'chrome', headless: false });
 try {
   const context = await browser.newContext();

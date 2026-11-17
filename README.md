@@ -1,6 +1,6 @@
 # ngx-convex
 
-[![CI](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/ngx-convex)](https://www.npmjs.com/package/ngx-convex)
+[![CI](https://github.com/tibdev78/ngx-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/ngx-convex/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/ngx-convex)](https://www.npmjs.com/package/ngx-convex)
 
 Angular bindings for [Convex](https://convex.dev). This repository contains:
 
@@ -107,6 +107,8 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 - **library**: builds the library, runs the unit tests and packs the tarball;
 - **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
+
+Run by hand with a `published` version (`gh workflow run ci.yml -f published=0.0.1`), the e2e and compat jobs use that package downloaded from npm instead of the local build, to check what users actually install. The unit tests always run on the sources.
 
 [`.github/workflows/latest.yml`](.github/workflows/latest.yml) runs every Monday (and on demand) against the newest releases: the library's unit tests on `convex@latest` and `@convex-dev/auth@latest`, then the compatibility check with Angular `latest` on Node 22, 24 and the current Node, and Angular `next` (a prerelease failure is reported as a warning only). A failed scheduled run notifies the repository owner, so a breaking release is caught before users hit it.
 

@@ -12,11 +12,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tibdev78/angular-convex.git",
+    "url": "git+https://github.com/tibdev78/ngx-convex.git",
     "directory": "projects/ngx-convex"
   },
-  "homepage": "https://github.com/tibdev78/angular-convex#readme",
-  "bugs": "https://github.com/tibdev78/angular-convex/issues",
+  "homepage": "https://github.com/tibdev78/ngx-convex#readme",
+  "bugs": "https://github.com/tibdev78/ngx-convex/issues",
   "peerDependencies": {
     "@angular/common": "^17.3.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0",
     "@angular/core": "^17.3.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0",

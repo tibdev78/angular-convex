@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      published:
+        description: 'Test this ngx-convex version from npm (for example 0.0.1 or latest) instead of the local build'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -24,7 +29,14 @@ jobs:
       - run: npm ci
       - run: npm run build:lib
       - run: npm run test:lib
-      - run: cd dist/ngx-convex && npm pack --pack-destination ../../compat
+      # The compat jobs install this tarball: the local build, or the
+      # published package when `published` is set.
+      - name: Pack the library
+        env: { PUBLISHED: '${{ inputs.published }}' }
+        run: |
+          if [ -n "$PUBLISHED" ]; then npm pack "ngx-convex@$PUBLISHED" --pack-destination compat
+          else (cd dist/ngx-convex && npm pack --pack-destination ../../compat); fi
+          ls compat/ngx-convex-*.tgz
       - uses: actions/upload-artifact@v4
         with: { name: tarball, path: compat/ngx-convex-*.tgz }
 
@@ -43,7 +55,17 @@ jobs:
         env:
           AUTH_GITHUB_CLIENT_ID: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_ID }}
           AUTH_GITHUB_CLIENT_SECRET: ${{ secrets.E2E_GITHUB_OAUTH_CLIENT_SECRET }}
-      - run: npm run build:lib
+      # The demo imports dist/ngx-convex: the local build, or the published
+      # package unpacked in its place when `published` is set.
+      - name: Library for the demo
+        env: { PUBLISHED: '${{ inputs.published }}' }
+        run: |
+          if [ -n "$PUBLISHED" ]; then
+            rm -rf dist/ngx-convex && mkdir -p dist/ngx-convex
+            npm pack "ngx-convex@$PUBLISHED" --pack-destination "$RUNNER_TEMP"
+            tar -xzf "$RUNNER_TEMP"/ngx-convex-*.tgz -C dist/ngx-convex --strip-components=1
+            echo "Using the published package: $(node -p "require('./dist/ngx-convex/package.json').version")"
+          else npm run build:lib; fi
       - run: npx playwright test --grep-invert @secrets
       # The test account's passkey must not land in a trace or the HTML
       # report, which are uploaded publicly: run it apart, list reporter only.
