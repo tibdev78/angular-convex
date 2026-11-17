@@ -32,6 +32,9 @@ jobs:
       # The unit-test builder compiles without type checking: this checks the
       # specs, including the type-level contract of the public API.
       - run: npm run typecheck:lib
+      # Typed lint rules resolve ngx-convex/* through dist, so after the build.
+      # The size budgets are a ratchet: a new overrun fails the job.
+      - run: npm run lint
       # The compat jobs install this tarball: the local build, or the
       # published package when `published` is set.
       - name: Pack the library

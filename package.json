@@ -10,6 +10,7 @@
     "build:lib": "ng build ngx-convex",
     "test:lib": "ng test ngx-convex --watch=false",
     "typecheck:lib": "tsc -p projects/ngx-convex/tsconfig.spec.json --noEmit",
+    "lint": "eslint projects --max-warnings 20",
     "e2e": "playwright test",
     "compat": "compat/run.sh",
     "compat:e2e": "playwright test -c compat/playwright.config.ts"
@@ -32,12 +33,16 @@
     "@angular/build": "^22.2.7",
     "@angular/cli": "^22.2.7",
     "@angular/compiler-cli": "^22.2.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "@types/node": "^22.20.5",
+    "angular-eslint": "^22.7.0",
+    "eslint": "^10.15.0",
     "jsdom": "^30.0.0",
     "ng-packagr": "^22.2.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.73.0",
     "vitest": "^5.0.0"
   }
 }

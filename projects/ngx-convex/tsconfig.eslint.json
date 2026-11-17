@@ -1,0 +1,6 @@
+/* ESLint's typed rules: every entry point (main, convex-auth, testing) and the specs. */
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "noEmit": true, "types": ["vitest/globals"] },
+  "include": ["**/*.ts"]
+}

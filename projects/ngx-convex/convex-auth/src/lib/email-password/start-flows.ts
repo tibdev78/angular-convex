@@ -36,7 +36,9 @@ function secretStartingFlow<Args, Result>(
         };
         if (result.success) {
           const { browserSecret, ...rest } = result;
-          await authClientStorage(client).set(EMAIL_PASSWORD_SECRET_STORAGE_KEYS[flow], browserSecret!);
+          // Without it the link cannot be completed in this browser: fail now, not on the link.
+          if (browserSecret === undefined) throw new Error(`${flow} succeeded without a browserSecret.`);
+          await authClientStorage(client).set(EMAIL_PASSWORD_SECRET_STORAGE_KEYS[flow], browserSecret);
           return record(rest as Result);
         }
         return record(result as Result);

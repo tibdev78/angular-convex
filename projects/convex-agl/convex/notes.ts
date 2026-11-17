@@ -14,7 +14,7 @@ export function embed(text: string): number[] {
   const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
   for (const word of text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []) {
     let hash = 2166136261;
-    for (const char of word) hash = Math.imul(hash ^ char.codePointAt(0)!, 16777619);
+    for (const char of word) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 16777619);
     vector[Math.abs(hash) % EMBEDDING_DIMENSIONS] += 1;
   }
   const norm = Math.hypot(...vector) || 1;

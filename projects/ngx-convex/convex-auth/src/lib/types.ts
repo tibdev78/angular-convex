@@ -1,4 +1,4 @@
-import type { AuthClientConfig } from '@convex-dev/auth/browser';
+import type { AuthClient, AuthClientConfig } from '@convex-dev/auth/browser';
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
 import type { SignInEnvelope } from '@convex-dev/auth';
 import type { QueryReference } from 'ngx-convex';
@@ -32,7 +32,7 @@ export interface ConvexMutationApi {
 export type AuthMutationReference = FunctionReference<'mutation', 'public'>;
 
 /** Session bundle accepted by `AuthClient.setSession`. */
-export type AuthSession = Parameters<import('@convex-dev/auth/browser').AuthClient['setSession']>[0];
+export type AuthSession = Parameters<AuthClient['setSession']>[0];
 
 /** The three functions exported by `convex/auth.ts` (`api.auth`). */
 export interface ConvexAuthClientApi {
@@ -73,6 +73,6 @@ export interface AuthClientStorage {
  * `AuthClient.storage` exists at runtime (React's email-password hooks use it)
  * but is `@internal`, so stripped from the published typings.
  */
-export function authClientStorage(client: import('@convex-dev/auth/browser').AuthClient): AuthClientStorage {
+export function authClientStorage(client: AuthClient): AuthClientStorage {
   return (client as unknown as { storage: AuthClientStorage }).storage;
 }

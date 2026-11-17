@@ -84,7 +84,7 @@ async function verifyIdToken(token: string): Promise<IdTokenClaims | null> {
 }
 
 const escapeHtml = (text: string) =>
-  text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+  text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
 const redirect = (url: string) => new Response(null, { status: 302, headers: { Location: url } });
 const oauthError = (error: string, status = 400) => Response.json({ error }, { status });

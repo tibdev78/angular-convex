@@ -152,7 +152,7 @@ function watchSession(api: ConvexAuthClientApi): void {
   effect(
     () => {
       if (!revoked()) return;
-      untracked(() => client.signOut().catch((error: unknown) => errorHandler.handleError(error)));
+      untracked(() => void client.signOut().catch((error: unknown) => errorHandler.handleError(error)));
     },
     { injector },
   );

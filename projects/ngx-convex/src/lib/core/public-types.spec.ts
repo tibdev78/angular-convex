@@ -61,12 +61,12 @@ function contract(): void {
   expectTypeOf(injectMutation(clear)()).toEqualTypeOf<Promise<null>>();
   injectMutation(add).withOptimisticUpdate((_store, args) => expectTypeOf(args).toEqualTypeOf<{ text: string }>());
   // @ts-expect-error wrong argument type
-  addTodo({ text: 1 });
+  void addTodo({ text: 1 });
   // @ts-expect-error a query is not a mutation
   injectMutation(list);
   expectTypeOf(injectAction(send)({ to: 'x' })).toEqualTypeOf<Promise<{ ok: boolean }>>();
   // @ts-expect-error missing required argument
-  injectAction(send)();
+  void injectAction(send)();
 }
 
 describe('public types', () => {
