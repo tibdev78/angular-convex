@@ -1,5 +1,7 @@
 # ngx-convex
 
+[![npm](https://img.shields.io/npm/v/ngx-convex)](https://www.npmjs.com/package/ngx-convex)
+
 Angular bindings for [Convex](https://convex.dev): live queries as **signals**, mutations and actions with optimistic updates, pagination, file storage, connection state, SSR prefetch, and the full **Convex Auth 2.0** client (password, email links, passkeys, OAuth). Nothing from React is involved.
 
 - Angular **17.3 → 22**, zoneless or zone.js, standalone APIs only (`inject*` functions, no decorators to learn).

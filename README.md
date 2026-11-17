@@ -1,6 +1,6 @@
 # ngx-convex
 
-[![CI](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml)
+[![CI](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml/badge.svg)](https://github.com/tibdev78/angular-convex/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/ngx-convex)](https://www.npmjs.com/package/ngx-convex)
 
 Angular bindings for [Convex](https://convex.dev). This repository contains:
 
