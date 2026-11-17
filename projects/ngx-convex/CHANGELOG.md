@@ -15,6 +15,10 @@ Clean-code pass on the whole library. Nothing changes at runtime for an app that
 ### Fixed
 
 - `injectQuery(api.x.y)` on a query declared without arguments no longer requires an argument object: the rule is Convex's (`EmptyArgs`).
+- `injectCompletePasswordRecovery` no longer stays `loading` forever when the token storage fails: the state becomes an `OTHER_ERROR` (added to its error union).
+- A failing `AuthClient.init()` (storage) or sign-out of a revoked session is reported to Angular's `ErrorHandler` instead of an unhandled rejection.
+- Server answers are checked before use, with a clear error: the OAuth `startSignIn` result (`{ redirect, state }`), the upload response (`storageId`), the passkey autofill options, and the `browserSecret` of the email-password sign-up, password recovery and email change starts.
+- `injectOauthSignIn(...).signIn()` throws the "No OAuth setup" error instead of failing on an undefined value.
 
 ### Added
 
@@ -25,6 +29,7 @@ Clean-code pass on the whole library. Nothing changes at runtime for an app that
 
 - No `as never` left in the library or its tests (50 before); `npm run typecheck:lib` checks the specs in CI, since the unit-test builder does not type-check.
 - Sign-in flows share one `runSignIn` (no `tokens!` assertion); `email-password` and the passkey ceremonies are split by responsibility.
+- ESLint with typed rules runs in CI: no `any`, no non-null assertion, no floating promise, no `as never`, and size budgets.
 
 ## 0.0.1
 
