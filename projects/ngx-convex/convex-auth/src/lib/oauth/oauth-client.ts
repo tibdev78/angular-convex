@@ -92,6 +92,18 @@ async function takePendingFlow(storage: SignInStorage): Promise<PendingFlow | nu
   }
 }
 
+/** What a provider's `startSignIn` mutation returns. */
+function isOauthStart(value: unknown): value is { redirect: string; state: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'redirect' in value &&
+    typeof value.redirect === 'string' &&
+    'state' in value &&
+    typeof value.state === 'string'
+  );
+}
+
 async function dropPendingFlow(storage: SignInStorage): Promise<void> {
   try {
     await storage.remove(OAUTH_FLOW_STORAGE_KEY);
@@ -163,10 +175,11 @@ export function oauth(): AmbientSignInClient {
       }
       setFlowError(null);
       try {
-        const { redirect, state } = (await convex.mutation(refs.startSignIn, { redirectTo })) as {
-          redirect: string;
-          state: string;
-        };
+        const started: unknown = await convex.mutation(refs.startSignIn, { redirectTo });
+        if (!isOauthStart(started)) {
+          throw new Error(`${getFunctionName(refs.startSignIn)} did not return { redirect, state }.`);
+        }
+        const { redirect, state } = started;
         await storage.set(
           OAUTH_FLOW_STORAGE_KEY,
           JSON.stringify({

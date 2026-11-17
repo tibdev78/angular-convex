@@ -82,7 +82,11 @@ function postFile(
         return;
       }
       try {
-        resolve((JSON.parse(xhr.responseText) as { storageId: string }).storageId);
+        const body: unknown = JSON.parse(xhr.responseText);
+        if (typeof body !== 'object' || body === null || !('storageId' in body) || typeof body.storageId !== 'string') {
+          throw new Error(`Upload response has no storageId: ${xhr.responseText}`);
+        }
+        resolve(body.storageId);
       } catch (e) {
         reject(toError(e));
       }

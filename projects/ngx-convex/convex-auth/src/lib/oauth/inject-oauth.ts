@@ -47,7 +47,11 @@ export function injectOauthSignIn(refs: OauthProviderRefs, options?: WithInjecto
     injector: resolveInjector(options?.injector),
   });
   if (actions() === undefined) throw new Error(NOT_REGISTERED_ERROR);
-  const signIn = ((signInOptions?: SignInOptions) => actions()!.signIn(refs, signInOptions)) as OauthSignIn;
+  const signIn = ((signInOptions?: SignInOptions) => {
+    const current = actions();
+    if (current === undefined) throw new Error(NOT_REGISTERED_ERROR);
+    return current.signIn(refs, signInOptions);
+  }) as OauthSignIn;
   return { signIn };
 }
 

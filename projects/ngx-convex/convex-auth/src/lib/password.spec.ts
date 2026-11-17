@@ -164,4 +164,17 @@ describe('email-password', () => {
     await flush();
     expect(state()).toEqual({ status: 'error', userError: { error: 'INVALID_CHALLENGE' } });
   });
+
+  it('password recovery: a failing storage is an OTHER_ERROR state, not a hang', async () => {
+    const storage = new InMemoryStorage();
+    const failing = {
+      getItem: (key: string) => (key.includes('Recovery') ? Promise.reject(new Error('storage down')) : storage.getItem(key)),
+      setItem: (key: string, value: string) => storage.setItem(key, value),
+      removeItem: (key: string) => storage.removeItem(key),
+    };
+    authSetup({ storage: failing });
+    const state = run(() => injectCompletePasswordRecovery(api, { emailCode: 'rc' }));
+    await flush();
+    expect(state()).toMatchObject({ status: 'error', userError: { error: 'OTHER_ERROR' } });
+  });
 });

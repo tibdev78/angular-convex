@@ -3,6 +3,7 @@ import {
   DestroyRef,
   effect,
   ENVIRONMENT_INITIALIZER,
+  ErrorHandler,
   inject,
   InjectionToken,
   Injector,
@@ -131,7 +132,11 @@ function createContext(options: ConvexAuthClientOptions): ConvexAuthContext {
     unsubscribe();
     client.dispose();
   });
-  if (!config.isServer) void client.init();
+  if (!config.isServer) {
+    // A failing token storage must surface, not leave the state loading forever unexplained.
+    const errorHandler = inject(ErrorHandler);
+    client.init().catch((error: unknown) => errorHandler.handleError(error));
+  }
 
   return { client, signInApi, state: state.asReadonly() };
 }
@@ -143,9 +148,11 @@ function watchSession(api: ConvexAuthClientApi): void {
   const convexAuth = injectConvexAuth();
   const live = injectQuery(api.isAuthenticated, () => (convexAuth.isAuthenticated() ? {} : 'skip'), { injector });
   const revoked = computed(() => live() === false);
+  const errorHandler = inject(ErrorHandler);
   effect(
     () => {
-      if (revoked()) untracked(() => void client.signOut());
+      if (!revoked()) return;
+      untracked(() => client.signOut().catch((error: unknown) => errorHandler.handleError(error)));
     },
     { injector },
   );

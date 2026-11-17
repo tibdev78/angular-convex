@@ -82,6 +82,16 @@ describe('oauth', () => {
     expect(result).toMatchObject({ status: 'error', userError: { error: 'OTHER_ERROR' } });
   });
 
+  it('refuses a start that does not return { redirect, state }', async () => {
+    const convex = new FakeConvexClient();
+    convex.onMutation(github.startSignInWithGithub, () => ({ redirect: 'https://github.com/login' }));
+    authSetup({ convex });
+    const { signIn } = run(() => injectSignInWithGithub(github));
+    const result = await signIn({ redirectTo: 'http://localhost/back' });
+    expect(result).toMatchObject({ status: 'error', userError: { error: 'OTHER_ERROR' } });
+    expect(String((result as { userError: { cause: unknown } }).userError.cause)).toMatch(/did not return \{ redirect, state \}/);
+  });
+
   it('throws when oauth() is not registered', () => {
     authSetup({ ambientSignIns: [] });
     expect(() => run(() => injectOauth())).toThrow(/No OAuth setup/);

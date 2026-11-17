@@ -8,8 +8,14 @@ import { injectQuery, type QueryReference, type ReturnOf } from 'ngx-convex';
 import { resolveInjector } from '../injector';
 import { createPending } from '../pending';
 import { injectConvexAuthContext } from '../provide-convex-auth-client';
-import { runSignIn } from '../sign-in';
-import { authClientStorage, type AuthMutationReference, type SignInUnexpectedFailure, type UserErrorOf } from '../types';
+import { otherError, runSignIn } from '../sign-in';
+import {
+  authClientStorage,
+  type AuthMutationReference,
+  type OtherError,
+  type SignInUnexpectedFailure,
+  type UserErrorOf,
+} from '../types';
 import {
   EMAIL_PASSWORD_SECRET_STORAGE_KEYS,
   foldSignInError,
@@ -49,7 +55,7 @@ export type CompletePasswordRecoveryState<Api extends PasswordRecoveryApi> =
       pending: boolean;
     }
   | { status: 'complete' }
-  | { status: 'error'; userError: PasswordRecoveryLinkError<Api> | MissingSecretError };
+  | { status: 'error'; userError: PasswordRecoveryLinkError<Api> | MissingSecretError | OtherError };
 
 /**
  * React `useCompletePasswordRecovery`: checks the link (live query), then lets
@@ -72,10 +78,13 @@ export function injectCompletePasswordRecovery<Api extends PasswordRecoveryApi>(
     () => {
       if (isLoading()) return;
       untracked(() => {
-        void (async () => {
-          const secret = await authClientStorage(client).get(EMAIL_PASSWORD_SECRET_STORAGE_KEYS.passwordRecovery);
-          browserSecret.set(secret ?? null);
-        })();
+        // The storage may answer synchronously or throw: one promise covers both.
+        Promise.resolve()
+          .then(() => authClientStorage(client).get(EMAIL_PASSWORD_SECRET_STORAGE_KEYS.passwordRecovery))
+          .then(
+            (secret) => browserSecret.set(secret ?? null),
+            (cause: unknown) => outcome.set({ status: 'error', userError: otherError(cause) }),
+          );
       });
     },
     { injector },

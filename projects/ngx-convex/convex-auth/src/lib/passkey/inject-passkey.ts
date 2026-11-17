@@ -101,10 +101,12 @@ export function injectSignInWithUsernamePasskey(
     ? startPasskeyAutofill<UsernamePasskeyAutofillError>({
         ceremonies,
         start: async () => {
-          const { options: requestOptions } = (await convex.mutation(
-            api.startAutofillSignInWithUsernamePasskey,
-            {},
-          )) as { options: WireRequestOptions };
+          const started: unknown = await convex.mutation(api.startAutofillSignInWithUsernamePasskey, {});
+          if (typeof started !== 'object' || started === null || !('options' in started)) {
+            throw new Error('startAutofillSignInWithUsernamePasskey did not return { options }.');
+          }
+          // The WebAuthn options are the server's; the ceremony validates them.
+          const requestOptions: WireRequestOptions = started.options as WireRequestOptions;
           return requestOptions;
         },
         onAssertion: async (response) => {
