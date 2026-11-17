@@ -28,3 +28,13 @@ export function assertOwner<T extends { ownerId: Id<"users"> }>(doc: T | null, u
   if (!doc || doc.ownerId !== userId) throw new ConvexError({ code: "NOT_FOUND" });
   return doc;
 }
+
+/** Outcome of a call whose availability depends on the plan or the deployment. */
+export type Probe = { ok: true; value: string } | { ok: false; error: string };
+export const probe = async (run: () => Promise<string>): Promise<Probe> => {
+  try {
+    return { ok: true, value: await run() };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message.split("\n")[0] : String(e) };
+  }
+};

@@ -174,7 +174,7 @@ export class LabPage {
   protected readonly page = injectPaginatedQuery(api.lab.page, {}, { initialNumItems: 2 });
   protected readonly normalized = injectQuery(api.lab.normalize, () => (this.rawId() ? { id: this.rawId() } : 'skip'));
   protected readonly cronStats = injectQuery(api.lab.cronStats);
-  protected readonly auditTrail = injectQuery(api.lab.auditTrail);
+  protected readonly auditTrail = injectQuery(api.audit.trail);
   protected readonly scheduled = injectQuery(api.lab.scheduledBumps);
   protected readonly failing = injectQuery(api.lab.boom, { code: 'LAB_FAILURE' });
   private readonly failingThrows = injectQuery(api.lab.boom, { code: 'LAB_THROWN' }, { throwOnError: true });
@@ -193,8 +193,8 @@ export class LabPage {
   protected readonly nested = injectMutation(api.lab.nested);
   protected readonly digest = injectAction(api.lab.digest);
   protected readonly viaTable = injectMutation(api.lab.viaTable);
-  protected readonly audit = injectMutation(api.lab.audit);
-  protected readonly platform = injectAction(api.lab.platform);
+  protected readonly audit = injectMutation(api.audit.record);
+  protected readonly platform = injectAction(api.platform.check);
   private readonly authenticatedHttp = injectAuthenticatedHttpClient();
   private readonly fetchToken = injectFetchAccessToken();
 

@@ -59,8 +59,8 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 | `createFunctionHandle`, scheduling a handle | `lab.ts` (`bumpLater`) | `lab.spec` |
 | `httpRouter`, `httpAction`, `pathPrefix`, CORS preflight, bearer auth | `convex/http.ts` | `lab.spec`, `features.spec` (system) |
 | `defineApp`, `defineComponent`, calling a component | `convex/convex.config.ts`, `convex/resend/`, `convex/demoAuth/` | `features.spec` (mail), `auth.spec` (anonymous, demo OIDC) |
-| `log.audit` with `log.vars` (`requestId`, `convexActor`, `ip`, `userAgent`, `now`) | `lab.ts` (`audit` mutation; `platform` action → `auditEvent` internal mutation; `auditEvents` table + `auditTrail` query) | `lab.spec`: recorded from a mutation and **from an action** through `ctx.runMutation` (a direct call in an action is refused by Convex: "Audit logging is not yet supported in actions"); both events appear in the live audit trail. Convex keeps `log.audit` durably only on Enterprise, so every event is also written to the `auditEvents` table, readable on any plan |
-| `getServiceUrl`, `getServiceToken` (Convex-managed services) | `lab.ts` (`platform`) | `lab.spec`: the AI gateway URL everywhere. The token depends on the deployment: an anonymous local backend asks for `npx convex login`, a free-plan cloud team gets "The Convex AI gateway is not enabled for your team", a paid team gets the token. On a paid team, run the suite with `E2E_EXPECT_SERVICE_TOKEN=1` to require the token (not yet run: the demo team is on the free plan) |
+| `log.audit` with `log.vars` (`requestId`, `convexActor`, `ip`, `userAgent`, `now`) | `audit.ts` (`record` mutation; `platform.ts` `check` action → `fromAction` internal mutation; `auditEvents` table + `trail` query) | `lab.spec`: recorded from a mutation and **from an action** through `ctx.runMutation` (a direct call in an action is refused by Convex: "Audit logging is not yet supported in actions"); both events appear in the live audit trail. Convex keeps `log.audit` durably only on Enterprise, so every event is also written to the `auditEvents` table, readable on any plan |
+| `getServiceUrl`, `getServiceToken` (Convex-managed services) | `platform.ts` (`check`) | `lab.spec`: the AI gateway URL everywhere. The token depends on the deployment: an anonymous local backend asks for `npx convex login`, a free-plan cloud team gets "The Convex AI gateway is not enabled for your team", a paid team gets the token. On a paid team, run the suite with `E2E_EXPECT_SERVICE_TOKEN=1` to require the token (not yet run: the demo team is on the free plan) |
 | `schema.doc(table)`, `paginationOptsValidator`, `paginationResultValidator` | `lab.ts` | `lab.spec` |
 
 ## Server — database
@@ -84,7 +84,7 @@ Unit tests are the library's Vitest specs (`*.spec.ts` next to the code). E2e te
 |---|---|---|
 | `storage.generateUploadUrl`, `getUrl`, `delete` | `files.ts`, `messages.ts` | `features.spec` (files, chat) |
 | `storage.store`, `storage.get` (from an action and an HTTP action) | `lab.ts` (`digest`), `http.ts` | `lab.spec` |
-| `storage.getMetadata` (deprecated, still served) | `lab.ts` (`platform`) | `lab.spec` |
+| `storage.getMetadata` (deprecated, still served) | `platform.ts` (`check`) | `lab.spec` |
 | `scheduler.runAfter`, `scheduler.runAt`, `scheduler.cancel` | `jobs.ts`, `mail.ts`, `lab.ts` | `features.spec` (jobs, mail), `lab.spec` |
 | `crons.interval`, `crons.cron`, `hourly`, `daily`, `weekly`, `monthly` | `convex/crons.ts` | `features.spec` (jobs counter), `lab.spec` (stats) |
 

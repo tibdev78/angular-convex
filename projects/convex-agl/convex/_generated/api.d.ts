@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
@@ -21,6 +22,7 @@ import type * as mail from "../mail.js";
 import type * as messages from "../messages.js";
 import type * as node from "../node.js";
 import type * as notes from "../notes.js";
+import type * as platform from "../platform.js";
 import type * as presence from "../presence.js";
 import type * as projects from "../projects.js";
 import type * as system from "../system.js";
@@ -34,6 +36,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  audit: typeof audit;
   auth: typeof auth;
   crons: typeof crons;
   events: typeof events;
@@ -47,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   node: typeof node;
   notes: typeof notes;
+  platform: typeof platform;
   presence: typeof presence;
   projects: typeof projects;
   system: typeof system;

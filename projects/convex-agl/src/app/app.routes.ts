@@ -1,7 +1,8 @@
-import { Routes } from '@angular/router';
+import type { Type } from '@angular/core';
+import type { Routes } from '@angular/router';
 import { authGuard } from './shared/auth-guard';
 
-const page = (title: string, load: () => Promise<unknown>) => ({ title, loadComponent: load as never });
+const page = (title: string, loadComponent: () => Promise<Type<unknown>>) => ({ title, loadComponent });
 const auth = () => import('./pages/auth/email-links');
 
 export const routes: Routes = [
