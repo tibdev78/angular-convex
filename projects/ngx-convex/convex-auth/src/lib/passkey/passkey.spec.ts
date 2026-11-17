@@ -3,7 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { fakeMutation, FakeConvexClient } from 'ngx-convex/testing';
 import { authSetup, complete, flush, run } from '../../test/auth-test-helpers';
 import { injectAuthToken } from '../provide-convex-auth-client';
-import type { PasskeyCeremonies, WireCreationOptions, WireRequestOptions } from './ceremonies';
+import type { PasskeyCeremonies } from './ceremonies';
+import type { WireCreationOptions, WireRequestOptions } from './wire';
 import {
   createUsernamePasskeyInjectors,
   injectAddPasskey,

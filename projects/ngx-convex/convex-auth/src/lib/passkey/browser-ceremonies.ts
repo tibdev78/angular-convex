@@ -6,20 +6,17 @@
  */
 import {
   foldClientError,
-  fromBase64URL,
   pruneAuthenticationResponse,
   pruneRegistrationResponse,
-  toBase64URL,
   type PasskeyAuthenticationResponse,
   type PasskeyAuthenticationResult,
   type PasskeyClientError,
   type PasskeyRegistrationResponse,
   type PasskeyRegistrationResult,
   type ResolvedPasskeyCeremonies,
-  type WireAuthenticationResponse,
-  type WireCreationOptions,
-  type WireRequestOptions,
 } from './ceremonies';
+import { fromBase64URL, toBase64URL } from './base64url';
+import type { WireAuthenticationResponse, WireCreationOptions, WireRequestOptions } from './wire';
 
 interface SimpleWebAuthn {
   startRegistration(args: { optionsJSON: unknown }): Promise<PasskeyRegistrationResponse>;

@@ -1,54 +1,15 @@
 /*
- * Ported from @convex-dev/auth 2.0.0 `src/methods/username-passkey/ceremonies.ts`,
- * `base64url.ts` and the wire types of `src/components/passkey/validation.ts`
- * (none of them exported by the package). Apache-2.0 © Convex, Inc.
+ * Ported from @convex-dev/auth 2.0.0 `src/methods/username-passkey/ceremonies.ts`
+ * (not exported by the package). Apache-2.0 © Convex, Inc.
  */
 import type { OtherError } from '../types';
 import { otherError } from '../sign-in';
-
-interface CredentialDescriptor {
-  id: string;
-  type: 'public-key';
-  transports?: string[];
-}
-
-/** `PublicKeyCredentialCreationOptionsJSON` as sent by the server. */
-export interface WireCreationOptions {
-  rp: { id: string; name: string };
-  user: { id: string; name: string; displayName: string };
-  challenge: string;
-  pubKeyCredParams: { alg: number; type: 'public-key' }[];
-  timeout: number;
-  excludeCredentials: CredentialDescriptor[];
-  authenticatorSelection: { residentKey: 'required'; requireResidentKey: true; userVerification: 'required' };
-  attestation: 'none';
-  extensions: Record<string, never>;
-}
-
-/** `PublicKeyCredentialRequestOptionsJSON` as sent by the server. */
-export interface WireRequestOptions {
-  challenge: string;
-  timeout: number;
-  rpId: string;
-  allowCredentials: CredentialDescriptor[];
-  userVerification: 'required';
-}
-
-export interface WireRegistrationResponse {
-  id: string;
-  rawId: string;
-  response: { clientDataJSON: string; attestationObject: string; transports?: string[] };
-  clientExtensionResults: Record<string, never>;
-  type: 'public-key';
-}
-
-export interface WireAuthenticationResponse {
-  id: string;
-  rawId: string;
-  response: { clientDataJSON: string; authenticatorData: string; signature: string; userHandle?: string };
-  clientExtensionResults: Record<string, never>;
-  type: 'public-key';
-}
+import type {
+  WireAuthenticationResponse,
+  WireCreationOptions,
+  WireRegistrationResponse,
+  WireRequestOptions,
+} from './wire';
 
 export type PasskeyClientError =
   | { error: 'CEREMONY_ABORTED' }
@@ -196,19 +157,4 @@ export function resolveCeremonies(ceremonies: PasskeyCeremonies): ResolvedPasske
     },
     onResume: autofill?.onResume ?? (() => () => undefined),
   };
-}
-
-export function toBase64URL(bytes: ArrayBuffer): string {
-  let binary = '';
-  for (const byte of new Uint8Array(bytes)) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-export function fromBase64URL(value: string): ArrayBuffer {
-  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes.buffer;
 }

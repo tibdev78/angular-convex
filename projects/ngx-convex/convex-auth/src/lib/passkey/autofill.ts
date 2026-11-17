@@ -9,9 +9,8 @@ import {
   type PasskeyClientError,
   type PasskeyClientFailure,
   type ResolvedPasskeyCeremonies,
-  type WireAuthenticationResponse,
-  type WireRequestOptions,
 } from './ceremonies';
+import type { WireAuthenticationResponse, WireRequestOptions } from './wire';
 
 export type PasskeyAutofillStatus = 'idle' | 'waiting' | 'signingIn' | 'signedIn' | 'stopped';
 

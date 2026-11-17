@@ -6,12 +6,8 @@ import type { SignInComplete } from '@convex-dev/auth';
 import type { DefaultFunctionArgs } from 'convex/server';
 import type { AuthMutationReference, AuthSession, AuthSignInApi, ConvexMutationApi } from '../types';
 import { runSignIn } from '../sign-in';
-import type {
-  PasskeyClientFailure,
-  ResolvedPasskeyCeremonies,
-  WireCreationOptions,
-  WireRequestOptions,
-} from './ceremonies';
+import type { PasskeyClientFailure, ResolvedPasskeyCeremonies } from './ceremonies';
+import type { WireCreationOptions, WireRequestOptions } from './wire';
 
 /** `api.passkey` from `methods/username-passkey/server`. */
 export interface UsernamePasskeyApi {

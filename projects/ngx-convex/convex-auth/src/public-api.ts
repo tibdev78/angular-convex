@@ -26,11 +26,13 @@ export type {
   PasskeyClientFailure,
   PasskeyRegistrationResponse,
   PasskeyAuthenticationResponse,
+} from './lib/passkey/ceremonies';
+export type {
   WireCreationOptions,
   WireRequestOptions,
   WireRegistrationResponse,
   WireAuthenticationResponse,
-} from './lib/passkey/ceremonies';
+} from './lib/passkey/wire';
 export type { AlreadyPendingError, AlreadyPendingFailure, PasskeyAutofillStatus } from './lib/passkey/autofill';
 export type {
   UsernamePasskeyApi,

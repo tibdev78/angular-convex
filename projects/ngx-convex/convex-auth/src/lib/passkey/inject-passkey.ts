@@ -27,7 +27,7 @@ import {
   type SignInFlowResult,
   type UsernamePasskeyApi,
 } from './flows';
-import type { WireRequestOptions } from './ceremonies';
+import type { WireRequestOptions } from './wire';
 
 /** WebAuthn implementation used by the passkey inject functions. Defaults to the browser one. */
 export const PASSKEY_CEREMONIES = new InjectionToken<ResolvedPasskeyCeremonies>('ngx-convex/convex-auth: passkey ceremonies', {
