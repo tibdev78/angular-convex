@@ -127,6 +127,10 @@ convex.setQuery(api.todos.list, {}, [{ _id: '1', text: 'a' }]);
 convex.onMutation(api.todos.add, ({ text }) => 'new-id');
 TestBed.configureTestingModule({ providers: [provideConvexTesting(convex)] });
 // convex.calls records every mutation/action; setQueryError, setPaginatedItems, setPaginatedError and setConnectionState are also available
+
+const todos = TestBed.runInInjectionContext(() => injectQuery(api.todos.list));
+await flushEffects(); // effects + change detection + pending promises, Angular 17 → latest
+expect(todos()).toHaveLength(1);
 ```
 
 ## Convex React → ngx-convex

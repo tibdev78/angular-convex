@@ -1,10 +1,10 @@
 import type { FunctionReference } from 'convex/server';
-import { ApplicationRef, EnvironmentInjector, type EnvironmentProviders, type Provider } from '@angular/core';
+import { EnvironmentInjector, type EnvironmentProviders, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { InMemoryStorage, type TokenStorage } from '@convex-dev/auth/browser';
 import { getFunctionName } from 'convex/server';
 // Through the package name (dist), like the sources: one copy of CONVEX_CLIENT.
-import { FakeConvexClient, fakeMutation, fakeQuery, provideConvexTesting } from 'ngx-convex/testing';
+import { FakeConvexClient, fakeMutation, fakeQuery, flushEffects, provideConvexTesting } from 'ngx-convex/testing';
 import {
   CONVEX_AUTH_HTTP_CLIENT,
   provideConvexAuthClient,
@@ -62,15 +62,7 @@ export function authSetup(options: AuthSetupOptions = {}) {
   return { convex, http, storage, injector };
 }
 
-/** Effects, change detection, then pending promises. */
-export async function flush(rounds = 5): Promise<void> {
-  for (let i = 0; i < rounds; i++) {
-    const tb = TestBed as unknown as { tick?: () => void; flushEffects?: () => void };
-    if (tb.tick) tb.tick();
-    else tb.flushEffects?.();
-    TestBed.inject(ApplicationRef).tick();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-}
+/** Effects, change detection, then pending promises: auth flows chain several awaits. */
+export const flush = (rounds = 5): Promise<void> => flushEffects(rounds);
 
 export const run = <T>(fn: () => T): T => TestBed.runInInjectionContext(fn);

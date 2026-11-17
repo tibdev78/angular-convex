@@ -1,4 +1,5 @@
-import { ApplicationRef, EnvironmentInjector, createEnvironmentInjector, type Provider, type EnvironmentProviders } from '@angular/core';
+import { flushEffects } from '../../testing/src/flush-effects';
+import { EnvironmentInjector, createEnvironmentInjector, type Provider, type EnvironmentProviders } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FakeConvexClient } from '../../testing/src/fake-convex-client';
 import { provideConvex } from '../lib/core/provide-convex';
@@ -18,10 +19,4 @@ export function childInjector() {
 }
 
 /** Flushes effects (works on Angular 17 → latest). */
-export async function flush(): Promise<void> {
-  const tb = TestBed as unknown as { tick?: () => void; flushEffects?: () => void };
-  if (tb.tick) tb.tick();
-  else tb.flushEffects?.();
-  TestBed.inject(ApplicationRef).tick();
-  await Promise.resolve();
-}
+export const flush = (): Promise<void> => flushEffects();
