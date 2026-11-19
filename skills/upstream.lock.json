@@ -1,0 +1,55 @@
+{
+  "repo": "https://github.com/get-convex/agent-skills",
+  "commit": "b32286cad1672916953ece2692535f72013f55d2",
+  "selected": [
+    "convex-authz",
+    "convex-crons",
+    "convex-deploy-guard",
+    "convex-design",
+    "convex-docs",
+    "convex-env",
+    "convex-expert",
+    "convex-explain-app",
+    "convex-migrate",
+    "convex-migrate-rehearse",
+    "convex-reviewer",
+    "convex-seed",
+    "convex-suggest",
+    "convex-test",
+    "convex-verify"
+  ],
+  "excluded": {
+    "convex-add": "Fetches procedures from an online catalog: content the lock cannot pin.",
+    "convex-advisor": "Production operations (72h insights).",
+    "convex-agent": "AI agent / RAG backend: not used by the library or the demo.",
+    "convex-backup": "Production operations (backups, restore drills).",
+    "convex-billing": "Stripe billing: not used.",
+    "convex-cost": "Production operations (spend).",
+    "convex-create-component": "Writing a Convex component: neither the library nor the demo does.",
+    "convex-domains": "Custom domains: not used.",
+    "convex-improve-convex-plugin": "Sends the session transcript to the Convex team.",
+    "convex-insights": "Production operations (official MCP).",
+    "convex-launch-readiness": "Production operations (runs the paid-plan audits).",
+    "convex-monitor": "Production operations.",
+    "convex-optimize": "Production operations.",
+    "convex-self-heal": "Production operations (opens fix PRs).",
+    "convex-sentinel": "Its client SDK is React; an Angular ErrorHandler adaptation needs the SDK studied first."
+  },
+  "adapted": {
+    "convex": {
+      "source": "convex",
+      "commit": "b32286cad1672916953ece2692535f72013f55d2",
+      "sha256": "876f1213139a00dc9b07c0be5f315d52581e787d568993b48e89cbcca29de679"
+    },
+    "convex-auth": {
+      "source": "convex-auth",
+      "commit": "b32286cad1672916953ece2692535f72013f55d2",
+      "sha256": "bc93e26c33b3eb998a61016475ee9bc9fd14ee28290f1f876730c2a674cdd2e8"
+    },
+    "convex-quickstart": {
+      "source": "convex-quickstart",
+      "commit": "b32286cad1672916953ece2692535f72013f55d2",
+      "sha256": "e0955e21d591d9e1f9e1985425b93cd5ae10c5723961c1f04acf8e6c3b52a3a5"
+    }
+  }
+}

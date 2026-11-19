@@ -20,7 +20,7 @@ npm install @convex-dev/auth @simplewebauthn/browser
 // app.config.ts
 import { provideConvex } from 'ngx-convex';
 import { provideConvexAuthClient } from 'ngx-convex/convex-auth'; // only with Convex Auth
-import { api } from '../convex/_generated/api';
+import { api } from '../../convex/_generated/api'; // convex/ at the project root
 
 export const appConfig: ApplicationConfig = {
   providers: [

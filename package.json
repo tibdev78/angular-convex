@@ -13,7 +13,9 @@
     "lint": "eslint projects --max-warnings 20",
     "e2e": "playwright test",
     "compat": "compat/run.sh",
-    "compat:e2e": "playwright test -c compat/playwright.config.ts"
+    "compat:e2e": "playwright test -c compat/playwright.config.ts",
+    "test:scripts": "node --test scripts/convex-skills/convex-skills.test.mjs scripts/convex-skills/checks.test.mjs",
+    "check:skills": "node scripts/check-skills.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.9",
