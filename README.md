@@ -104,7 +104,7 @@ The script uses [fnm](https://github.com/Schniz/fnm) when it is installed; other
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs three jobs on every push and pull request:
 
-- **library**: builds the library, runs the unit tests and packs the tarball;
+- **library**: builds the library, runs the unit tests, checks `skills/` against the built types (`npm run check:skills`, `npm run test:scripts`) and packs the tarball;
 - **e2e**: starts an anonymous local backend ([`scripts/ci-backend.sh`](scripts/ci-backend.sh)), runs the whole Playwright suite, then `scripts/dashboard-cli.sh`;
 - **compat**: one job per matrix row, on that row's Node, then runs each build against a local backend.
 
@@ -132,6 +132,23 @@ Locally, export the `E2E_GITHUB_*` variables and set the OAuth app with `npx con
 #### On a paid Convex team
 
 `E2E_EXPECT_SERVICE_TOKEN=1 E2E_CONFIG=cloud npx playwright test e2e/lab.spec.ts` requires `getServiceToken` to return a token instead of accepting the free-plan refusal.
+
+## Agent skills
+
+`skills/` holds agent skills (Claude Code, Codex) for building Angular apps on Convex with this library. They are not part of the npm package.
+
+- `convex-angular` (original): the Angular counterpart of `convex/react`, with an API map from each React hook to its `inject*` function.
+- `convex`, `convex-auth`, `convex-quickstart`: adapted from [get-convex/agent-skills](https://github.com/get-convex/agent-skills) (Apache-2.0, see [`skills/NOTICE`](skills/NOTICE)). The server-side instructions are unchanged; the client side uses ngx-convex.
+- 15 backend skills from the same repository, installed unmodified: `convex-expert`, `convex-design`, `convex-reviewer`, `convex-authz`, `convex-migrate`, and so on. The others (billing, hosting, monitoring, ops) are left out; the reason for each is in [`skills/upstream.lock.json`](skills/upstream.lock.json).
+
+```bash
+node scripts/convex-skills.mjs install         # into ~/.claude/skills and ~/.agents/skills, at the locked commit
+node scripts/convex-skills.mjs check           # what changed upstream since the locked commit, with the diff
+node scripts/convex-skills.mjs update          # same report, then asks before installing and locking the new commit
+node scripts/convex-skills.mjs reviewed <name> # after re-reading an adapted skill against its new upstream source
+```
+
+The script only replaces or removes folders it installed itself (each carries a `.ngx-convex-skills` marker). A skill folder with the same name that it did not create stops the install before anything is written. When an upstream skill that one of the adaptations comes from changes, `check` flags the adaptation as *TO REVIEW*. `npm run check:skills` makes sure every ngx-convex API the skills cite exists in the built types.
 
 ## Limits and paid plans
 
